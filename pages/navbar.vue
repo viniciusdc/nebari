@@ -3,7 +3,7 @@
   <v-app-bar app flat fixed color="primary" light>
    <!-- TODO: Change to base path -->
    <div>
-   <a href="/qhub-ops/">
+   <a href="/">
    <v-img 
    :src="myImage"
    height="180px"

@@ -79,7 +79,6 @@ def prompt_github_config(config):
 def prompt_auth0_config(config):
     client_id = click.prompt("Auth0 Client ID")
     client_secret = click.prompt("Auth0 Client Secret")
-    auth0_subdomain = click.prompt("Auth0 Subdomain")
 
     config["auth"]["type"] = "custom"
     config["auth"]["custom"] = {
@@ -152,6 +151,7 @@ def prompt_gcp_config(config):
 
 
 def prompt_aws_config(config):
+    project = ""  # check
     region = prompt_dict("Region", amazon_web_services.regions())
     config["amazon_web_services"]["region"] = region
     availability_zones = read_user_multichoice_dict(
@@ -206,9 +206,9 @@ def prompt_config():
 
     auth_config = {"auth": {"admin": {"access": True, "users": []}, "whitelist": []}}
 
-    if authentication == "github":
-        prompt_github_auth_config(auth_config)
-    elif authentication == "auth0":
+    # if authentication == "github":
+    #   prompt_github_auth_config(auth_config) # Not found!
+    if authentication == "auth0":
         prompt_auth0_config(auth_config)
 
     config["authentication"] = yaml.dumps(auth_config)

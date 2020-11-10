@@ -3,7 +3,7 @@ from os import path
 import os
 import re
 import json
-from subprocess import check_output
+from subprocess import run as check_output
 from shutil import which
 
 from qhub.utils import timer, change_directory

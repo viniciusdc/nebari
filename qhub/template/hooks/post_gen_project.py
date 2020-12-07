@@ -31,4 +31,3 @@ if __name__ == "__main__":
 
     if INSTALL_PREFECT != True:
         remove_file("infrastructure/prefect.tf")
-

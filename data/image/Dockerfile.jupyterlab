@@ -1,0 +1,86 @@
+FROM debian:10.3-slim
+LABEL MAINTAINER="Quansight"
+
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV PATH /opt/conda/bin:$PATH
+
+RUN apt-get update --fix-missing && \
+    apt-get install -y wget bzip2 ca-certificates curl git
+
+# ============= base install ===============
+ENV CONDA_VERSION py37_4.8.2
+ENV CONDA_SHA256 957d2f0f0701c3d1335e3b39f235d197837ad69a944fa6f5d8ad2c686b69df3b
+
+COPY scripts /opt/scripts
+
+RUN /opt/scripts/install-conda.sh
+
+ENV PATH="/opt/conda/bin:$PATH"
+
+CMD [ "/bin/bash" ]
+
+ARG NB_USER="jovyan"
+# We assume only one user per container, so make it unique
+# UID matches GID
+ARG NB_UID="1000"
+
+ENV SHELL=/bin/bash \
+    CONDA_DIR=/opt/conda \
+    DEFAULT_ENV=default
+
+# Activate default environment
+ENV PATH=${CONDA_DIR}/envs/${DEFAULT_ENV}/bin:${CONDA_DIR}/bin:${PATH}
+
+# Enable prompt color in the skeleton .bashrc before creating the default NB_USER
+RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc && \
+    # Create user & group jovyan
+    groupadd --gid ${NB_UID} ${NB_USER} && \
+    useradd \
+    --comment 'Jupyter container user' \
+    --create-home \
+    --no-log-init \
+    --shell /bin/bash \
+    --gid ${NB_UID} \
+    --uid ${NB_UID} \
+    ${NB_USER}
+
+RUN chown -R ${NB_UID}:${NB_UID} /opt/conda/
+
+# ========== jupyterlab install ============
+COPY jupyterlab /opt/jupyterlab
+
+RUN /opt/scripts/install-apt.sh                  /opt/jupyterlab/apt.txt \
+    && /opt/scripts/install-conda-environment.sh /opt/jupyterlab/environment.yaml \
+    && /opt/jupyterlab/postBuild
+
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# ========== code-server proxy install ============
+COPY code-server /opt/code-server
+
+RUN	wget -qO- opt/code-server  https://github.com/cdr/code-server/releases/download/3.4.1/code-server-3.4.1-linux-x86_64.tar.gz | tar zxvf - --strip-components=1
+ENV	PATH=/opt/code-server/bin:$PATH
+
+# ARG code_server_proxy_wheel="jupyter_codeserver_proxy-1.0b3-py3-none-any.whl"
+
+# # @jupyterlab/server-proxy v3.0.2 enabled OK
+# RUN curl -fsSL https://code-server.dev/install.sh | sh && \
+#     pip install --quiet --no-cache-dir "./dist/${code_server_proxy_wheel}" && \
+#     rm "./dist/${code_server_proxy_wheel}"
+
+# RUN rm "${HOME}/${code_server_proxy_wheel}"
+
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# ========== change to regular user ============
+USER ${NB_UID}
+
+RUN echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc
+
+# Add integration from JupyterLab + code-server
+RUN echo 'mv opt/code-server/jupyter_codeserver_proxy.py /opt/conda/etc/jupyter' && \
+    echo 'mv opt/code-server/icons /opt/conda/etc/jupyter'
+
+WORKDIR /home/${NB_USER}

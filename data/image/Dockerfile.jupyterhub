@@ -1,0 +1,38 @@
+FROM debian:10.3-slim
+LABEL MAINTAINER="Quansight"
+
+# ============== base install ===============
+ENV CONDA_VERSION py37_4.8.2
+ENV CONDA_SHA256 957d2f0f0701c3d1335e3b39f235d197837ad69a944fa6f5d8ad2c686b69df3
+
+COPY scripts /opt/scripts
+
+RUN /opt/scripts/install-conda.sh
+
+ENV PATH="/opt/conda/bin:$PATH"
+
+# ========== jupyterhub install ===========
+COPY jupyterhub /opt/jupyterhub
+
+RUN /opt/scripts/install-conda-environment.sh /opt/jupyterhub/environment.yaml \
+    && /opt/jupyterhub/postBuild
+
+# ========= Create USER =============
+ARG NB_USER=jovyan
+ARG NB_UID=1000
+ARG HOME=/home/jovyan
+
+RUN adduser --disabled-password \
+    --gecos "Default user" \
+    --uid ${NB_UID} \
+    --home ${HOME} \
+    --force-badname \
+    ${NB_USER}
+
+WORKDIR /srv/jupyterhub
+
+# So we can actually write a db file here
+RUN chown ${NB_USER}:${NB_USER} /srv/jupyterhub
+
+USER ${NB_USER}
+CMD ["jupyterhub", "--config", "/usr/local/etc/jupyterhub/jupyterhub_config.py"]

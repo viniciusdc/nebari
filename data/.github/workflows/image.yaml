@@ -1,0 +1,24 @@
+name: "Docker Image Build"
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "image/**"
+      - ".github/workflows/image.yaml"
+
+jobs:
+  build:
+    name: QHub Build Dockerfile
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dockerfile:
+          - jupyterlab
+          - jupyterhub
+          - dask-worker
+    steps:
+      - name: 'Checkout Image'
+        uses: actions/checkout@master
+

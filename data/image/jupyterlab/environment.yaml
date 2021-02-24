@@ -1,0 +1,47 @@
+name: base
+channels:
+  - conda-forge
+dependencies:
+ # general
+ - pip
+
+ # jupyterhub/jupyterlab
+ - nb_conda_kernels
+ - ipython > 7
+ - jupyter-server-proxy
+ - jupyterlab >=3
+ - jupyter_client
+ - jupyter_console
+ - jupyterhub
+ - nbconvert
+ - nbval
+
+ # jupyterlab extensions
+ - dask_labextension >=5.0.0
+ # jupyterlab-git >=0.30.0 # uncomment when 0.30.0 is released
+ - jupyter-videochat
+ - ipywidgets >=7.6
+ - ipyleaflet >=0.13.5
+ - pyviz_comms >=2.0.1
+
+ # viz tools
+ - param
+ - python-graphviz
+ - matplotlib >= 3.3.4
+ - panel >= 0.10.3
+ - voila >= 0.2.7
+ - streamlit >= 0.76
+ - dash >= 1.19
+ - cdsdashboards-singleuser >= 0.5.0
+
+ # testing, docs, linting
+ - pytest
+ - hypothesis
+ - flake8
+ - sphinx
+ - pytest-cov
+ - black
+ - isort
+ - importnb
+
+ - pip: []

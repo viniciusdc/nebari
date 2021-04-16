@@ -34,9 +34,9 @@ BASE_CONFIGURATION = {
         "groups": {"users": {"gid": 100}, "admin": {"gid": 101}},
     },
     "default_images": {
-        "jupyterhub": "quansight/qhub-jupyterhub:d52cea07f70cc8b35c29b327bbd2682f29d576ad",
-        "jupyterlab": "quansight/qhub-jupyterlab:d52cea07f70cc8b35c29b327bbd2682f29d576ad",
-        "dask_worker": "quansight/qhub-dask-worker:d52cea07f70cc8b35c29b327bbd2682f29d576ad",
+        "jupyterhub": "quansight/qhub-jupyterhub:c36eace493739be280c71bec59b80659115db5d5",
+        "jupyterlab": "quansight/qhub-jupyterlab:c36eace493739be280c71bec59b80659115db5d5",
+        "dask_worker": "quansight/qhub-dask-worker:c36eace493739be280c71bec59b80659115db5d5",
     },
     "storage": {"conda_store": "20Gi", "shared_filesystem": "10Gi"},
     "theme": {
@@ -53,7 +53,16 @@ BASE_CONFIGURATION = {
             "h2_color": "#652e8e",
         }
     },
+    "cdsdashboards": {
+        "enabled": True,
+        "cds_hide_user_named_servers": True,
+        "cds_hide_user_dashboard_servers": False,
+    },
     "cdsdashboards": {"enabled": True},
+}
+
+AUTH_PASSWORD = {
+    "type": "password",
 }
 
 AUTH_PASSWORD = {
@@ -112,7 +121,18 @@ GOOGLE_PLATFORM = {
     "region": "us-central1",
     "zone": "us-central1-c",
     "availability_zones": ["us-central1-c"],
-    "kubernetes_version": "1.14.10-gke.31",
+    "kubernetes_version": "1.18.16-gke.502",
+    "node_groups": {
+        "general": {"instance": "n1-standard-2", "min_nodes": 1, "max_nodes": 1},
+        "user": {"instance": "n1-standard-2", "min_nodes": 1, "max_nodes": 4},
+        "worker": {"instance": "n1-standard-2", "min_nodes": 1, "max_nodes": 4},
+    },
+}
+
+AZURE = {
+    "project": "PLACEHOLDER",
+    "region": "Central US",
+    "kubernetes_version": "1.18.14",
     "node_groups": {
         "general": {"instance": "n1-standard-2", "min_nodes": 1, "max_nodes": 1},
         "user": {"instance": "n1-standard-2", "min_nodes": 1, "max_nodes": 4},
@@ -145,7 +165,7 @@ AZURE = {
 AMAZON_WEB_SERVICES = {
     "region": "us-west-2",
     "availability_zones": ["us-west-2a", "us-west-2b"],
-    "kubernetes_version": "1.14",
+    "kubernetes_version": "1.18",
     "node_groups": {
         "general": {"instance": "m5.large", "min_nodes": 1, "max_nodes": 1},
         "user": {"instance": "m5.large", "min_nodes": 1, "max_nodes": 2},
@@ -164,7 +184,7 @@ DEFAULT_PROFILES = {
                 "cpu_guarantee": 1,
                 "mem_limit": "1G",
                 "mem_guarantee": "1G",
-                "image": "quansight/qhub-jupyterlab:d52cea07f70cc8b35c29b327bbd2682f29d576ad",
+                "image": "quansight/qhub-jupyterlab:c36eace493739be280c71bec59b80659115db5d5",
             },
         },
         {
@@ -175,7 +195,7 @@ DEFAULT_PROFILES = {
                 "cpu_guarantee": 1.25,
                 "mem_limit": "2G",
                 "mem_guarantee": "2G",
-                "image": "quansight/qhub-jupyterlab:d52cea07f70cc8b35c29b327bbd2682f29d576ad",
+                "image": "quansight/qhub-jupyterlab:c36eace493739be280c71bec59b80659115db5d5",
             },
         },
     ],
@@ -185,14 +205,14 @@ DEFAULT_PROFILES = {
             "worker_cores": 1,
             "worker_memory_limit": "1G",
             "worker_memory": "1G",
-            "image": "quansight/qhub-dask-worker:d52cea07f70cc8b35c29b327bbd2682f29d576ad",
+            "image": "quansight/qhub-dask-worker:c36eace493739be280c71bec59b80659115db5d5",
         },
         "Medium Worker": {
             "worker_cores_limit": 1.5,
             "worker_cores": 1.25,
             "worker_memory_limit": "2G",
             "worker_memory": "2G",
-            "image": "quansight/qhub-dask-worker:d52cea07f70cc8b35c29b327bbd2682f29d576ad",
+            "image": "quansight/qhub-dask-worker:c36eace493739be280c71bec59b80659115db5d5",
         },
     },
 }

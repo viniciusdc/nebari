@@ -5,8 +5,9 @@ import pydantic
 
 
 class CertificateEnum(str, enum.Enum):
-    selfsigned = "self-signed"
     letsencrypt = "lets-encrypt"
+    selfsigned = "self-signed"
+    existing = "existing"
 
 
 class TerraformStateEnum(str, enum.Enum):
@@ -52,7 +53,7 @@ class TerraformState(Base):
 
 class TerraformModules(Base):
     repository: str = "github.com/quansight/qhub-terraform-modules"
-    rev: str = "dev"
+    rev: str = "main"
 
 
 # ============ Certificate =============
@@ -60,6 +61,9 @@ class TerraformModules(Base):
 
 class Certificate(Base):
     type: CertificateEnum
+    # existing
+    secret_name: typing.Optional[str]
+    # lets-encrypt
     acme_email: typing.Optional[str]
     acme_server: typing.Optional[str]
 
@@ -230,6 +234,8 @@ class CondaEnvironment(Base):
 
 class CDSDashboards(Base):
     enabled: bool
+    cds_hide_user_named_servers: typing.Optional[bool]
+    cds_hide_user_dashboard_servers: typing.Optional[bool]
 
 
 # ==================== Main ===================

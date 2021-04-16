@@ -61,6 +61,26 @@ certificate:
   acme_server:
 ```
 
+You may also supply a custom self signed certificate and secret
+key. Note that the kubernetes default namespace that QHub uses is
+`dev` if not specified. Otherwise it will be your `namespace` defined
+in the `qhub-config.yaml`.
+
+```yaml
+certificate:
+  type: existing
+  secret_name: <secret-name>
+```
+
+To add the tls certificate to kubernetes run the following command
+with existing files.
+
+```shell
+kubectl create secret tls <secret-name> \
+  --namespace=<namespace> \
+  --cert=path/to/cert/file --key=path/to/key/file
+```
+
 ## Security
 
 This section is for configuring security relating to the QHub
@@ -100,7 +120,20 @@ authentication.
 
 #### Auth0 Based Authentication
 
-For Auth0 based authentication.
+[Auth0](https://auth0.com/#!) can be used for authentication. While it
+is not free there is a reasonable free tier that allows deployment of
+QHub clusters on many different social providers, passwordless, and
+email based authentication. QHub has command line options with running
+`qhub init` which allow for automation of creation of the application
+via `--auth-provider=auth0 --auth-auto-provision`. However for most
+users this may not be the most convenient solution. Here are docs on
+[creating an Auth0
+Application](https://auth0.com/docs/applications). Make sure to select
+`Regular Web Application`. Important to note is the `auth0_subdomain`
+field which must be only the `<auth0_subdomain>.auth0.com`. So for the
+following `qhub-dev.auth0.com` the subdomain would be `qhub-dev`. Note
+that all the usernames will be the email addresses of users (not
+usernames).
 
 ```yaml
 security:
@@ -116,7 +149,9 @@ security:
 
 #### GitHub Based Authentication
 
-For Auth0 based authentication.
+Github has instructions for [creating OAuth
+applications](https://docs.github.com/en/developers/apps/creating-an-oauth-app). Note
+that QHub usernames will their GitHub usernames.
 
 ```yaml
 security:
@@ -413,7 +448,7 @@ the `qhub-config.yaml` file.
 ```yaml
 terraform_modules:
   repository: "github.com/quansight/qhub-terraform-modules"
-  rev: dev
+  rev: main
 ```
 
 ## Default Images
@@ -426,9 +461,9 @@ image.
 
 ```yaml
 default_images:
-  jupyterhub: "quansight/qhub-jupyterhub:d52cea07f70cc8b35c29b327bbd2682f29d576ad"
-  jupyterlab: "quansight/qhub-jupyterlab:d52cea07f70cc8b35c29b327bbd2682f29d576ad"
-  dask_worker: "quansight/qhub-dask-worker:d52cea07f70cc8b35c29b327bbd2682f29d576ad"
+  jupyterhub: "quansight/qhub-jupyterhub:c36eace493739be280c71bec59b80659115db5d5"
+  jupyterlab: "quansight/qhub-jupyterlab:c36eace493739be280c71bec59b80659115db5d5"
+  dask_worker: "quansight/qhub-dask-worker:c36eace493739be280c71bec59b80659115db5d5"
 ```
 
 ## Storage
@@ -464,7 +499,7 @@ profiles:
         cpu_guarantee: 1
         mem_limit: 1G
         mem_guarantee: 1G
-        image: "quansight/qhub-jupyterlab:d52cea07f70cc8b35c29b327bbd2682f29d576ad"
+        image: "quansight/qhub-jupyterlab:c36eace493739be280c71bec59b80659115db5d5"
     - display_name: Medium Instance
       description: Stable environment with 1.5 cpu / 2 GB ram
       kubespawner_override:
@@ -472,7 +507,7 @@ profiles:
         cpu_guarantee: 1.25
         mem_limit: 2G
         mem_guarantee: 2G
-        image: "quansight/qhub-jupyterlab:d52cea07f70cc8b35c29b327bbd2682f29d576ad"
+        image: "quansight/qhub-jupyterlab:c36eace493739be280c71bec59b80659115db5d5"
 
   dask_worker:
     "Small Worker":
@@ -480,13 +515,13 @@ profiles:
       worker_cores: 1
       worker_memory_limit: 1G
       worker_memory: 1G
-      image: "quansight/qhub-dask-worker:d52cea07f70cc8b35c29b327bbd2682f29d576ad"
+      image: "quansight/qhub-dask-worker:c36eace493739be280c71bec59b80659115db5d5"
     "Medium Worker":
       worker_cores_limit: 1.5
       worker_cores: 1.25
       worker_memory_limit: 2G
       worker_memory: 2G
-      image: "quansight/qhub-dask-worker:d52cea07f70cc8b35c29b327bbd2682f29d576ad"
+      image: "quansight/qhub-dask-worker:c36eace493739be280c71bec59b80659115db5d5"
 ```
 
 For each `profiles.jupyterlab` is a named JupyterLab profile. It
@@ -683,9 +718,9 @@ digital_ocean:
       max_nodes: 4
 
 default_images:
-  jupyterhub: "quansight/qhub-jupyterhub:d52cea07f70cc8b35c29b327bbd2682f29d576ad"
-  jupyterlab: "quansight/qhub-jupyterlab:d52cea07f70cc8b35c29b327bbd2682f29d576ad"
-  dask_worker: "quansight/qhub-dask-worker:d52cea07f70cc8b35c29b327bbd2682f29d576ad"
+  jupyterhub: "quansight/qhub-jupyterhub:c36eace493739be280c71bec59b80659115db5d5"
+  jupyterlab: "quansight/qhub-jupyterlab:c36eace493739be280c71bec59b80659115db5d5"
+  dask_worker: "quansight/qhub-dask-worker:c36eace493739be280c71bec59b80659115db5d5"
 
 theme:
   jupyterhub:
@@ -716,7 +751,7 @@ profiles:
         cpu_guarantee: 1
         mem_limit: 1G
         mem_guarantee: 1G
-        image: "quansight/qhub-jupyterlab:d52cea07f70cc8b35c29b327bbd2682f29d576ad"
+        image: "quansight/qhub-jupyterlab:c36eace493739be280c71bec59b80659115db5d5"
     - display_name: Medium Instance
       description: Stable environment with 1.5 cpu / 2 GB ram
       default: true
@@ -725,7 +760,7 @@ profiles:
         cpu_guarantee: 1.25
         mem_limit: 2G
         mem_guarantee: 2G
-        image: "quansight/qhub-jupyterlab:d52cea07f70cc8b35c29b327bbd2682f29d576ad"
+        image: "quansight/qhub-jupyterlab:c36eace493739be280c71bec59b80659115db5d5"
 
   dask_worker:
     "Small Worker":
@@ -733,13 +768,13 @@ profiles:
       worker_cores: 1
       worker_memory_limit: 1G
       worker_memory: 1G
-      image: "quansight/qhub-dask-worker:d52cea07f70cc8b35c29b327bbd2682f29d576ad"
+      image: "quansight/qhub-dask-worker:c36eace493739be280c71bec59b80659115db5d5"
     "Medium Worker":
       worker_cores_limit: 1.5
       worker_cores: 1.25
       worker_memory_limit: 2G
       worker_memory: 2G
-      image: "quansight/qhub-dask-worker:d52cea07f70cc8b35c29b327bbd2682f29d576ad"
+      image: "quansight/qhub-dask-worker:c36eace493739be280c71bec59b80659115db5d5"
 
 environments:
   "environment-default.yaml":

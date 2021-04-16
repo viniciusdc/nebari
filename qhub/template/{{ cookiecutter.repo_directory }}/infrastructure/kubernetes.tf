@@ -5,17 +5,39 @@ provider "kubernetes" {
   config_context = "{{ cookiecutter.local.kube_context }}"
 {% endif %}
 {% elif cookiecutter.provider == "azure" %}
-  username           = module.kubernetes.credentials.username
-  password           = module.kubernetes.credentials.password
-  client_certificate = module.kubernetes.credentials.client_certificate
-  client_key         = module.kubernetes.credentials.client_key
-  token              = module.kubernetes.credentials.token
+  username               = module.kubernetes.credentials.username
+  password               = module.kubernetes.credentials.password
+  client_certificate     = module.kubernetes.credentials.client_certificate
+  client_key             = module.kubernetes.credentials.client_key
+  cluster_ca_certificate = module.kubernetes.credentials.cluster_ca_certificate
+  host                   = module.kubernetes.credentials.endpoint
 {% else %}
   host                   = module.kubernetes.credentials.endpoint
   cluster_ca_certificate = module.kubernetes.credentials.cluster_ca_certificate
   token                  = module.kubernetes.credentials.token
 {% endif %}
 }
+
+provider "kubernetes-alpha" {
+{% if cookiecutter.provider == "local" %}
+  config_path = "~/.kube/config"
+{% if cookiecutter.local.kube_context is defined %}
+  config_context = "{{ cookiecutter.local.kube_context }}"
+{% endif %}
+{% elif cookiecutter.provider == "azure" %}
+  username               = module.kubernetes.credentials.username
+  password               = module.kubernetes.credentials.password
+  client_certificate     = module.kubernetes.credentials.client_certificate
+  client_key             = module.kubernetes.credentials.client_key
+  cluster_ca_certificate = module.kubernetes.credentials.cluster_ca_certificate
+  host                   = module.kubernetes.credentials.endpoint
+{% else %}
+  host                   = module.kubernetes.credentials.endpoint
+  cluster_ca_certificate = module.kubernetes.credentials.cluster_ca_certificate
+  token                  = module.kubernetes.credentials.token
+{% endif %}
+}
+
 
 module "kubernetes-initialization" {
   source = "{{ cookiecutter.terraform_modules.repository }}//modules/kubernetes/initialization?ref={{ cookiecutter.terraform_modules.rev }}"
@@ -33,10 +55,6 @@ module "kubernetes-nfs-mount" {
   namespace    = var.environment
   nfs_capacity = "{{ cookiecutter.storage.shared_filesystem }}"
   nfs_endpoint = module.efs.credentials.dns_name
-
-  depends_on = [
-    module.kubernetes-nfs-server
-  ]
 }
 {% else -%}
 module "kubernetes-nfs-server" {
@@ -69,7 +87,7 @@ module "kubernetes-nfs-mount" {
 module "kubernetes-conda-store-server" {
   source = "{{ cookiecutter.terraform_modules.repository }}//modules/kubernetes/services/conda-store?ref={{ cookiecutter.terraform_modules.rev }}"
 
-  name         = "conda-store"
+  name         = "qhub"
   namespace    = var.environment
   nfs_capacity = "{{ cookiecutter.storage.conda_store }}"
   node-group   = local.node_groups.general
@@ -169,13 +187,15 @@ module "qhub" {
   user-node-group    = local.node_groups.user
   worker-node-group  = local.node_groups.worker
 
+{% if cookiecutter.certificate.type == "existing" %}
+  certificate-secret-name = "{{ cookiecutter.certificate.secret_name }}"
+{% endif %}
+
   jupyterhub-overrides = [
     file("jupyterhub.yaml")
   ]
 
-  dask-gateway-overrides = [
-    file("dask-gateway.yaml")
-  ]
+  dask_gateway_extra_config = file("dask_gateway_config.py.j2")
 
   depends_on = [
     module.kubernetes-ingress
@@ -184,7 +204,7 @@ module "qhub" {
 
 {% if cookiecutter.prefect is true -%}
 module "prefect" {
-  source = "github.com/quansight/qhub-terraform-modules//modules/kubernetes/services/prefect?ref={{ cookiecutter.terraform_modules.rev }}"
+  source = "{{ cookiecutter.terraform_modules.repository }}//modules/kubernetes/services/prefect?ref={{ cookiecutter.terraform_modules.rev }}"
 
   depends_on = [
     module.qhub

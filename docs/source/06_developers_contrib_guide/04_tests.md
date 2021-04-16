@@ -152,7 +152,7 @@ Minikube does not provide a simple interactive way to configure addons,
 ([as shown in this repository issue](https://github.com/kubernetes/minikube/issues/8283)). Hence, we suggest setting the
 load balancer IP address using a Python script with pre-established values. The recommendation to keep the values is due
 to an existing DNS name that already points to the address. To do so, paste
-[this Python script](https://github.com/Quansight/qhub-cloud/blob/dev/tests/scripts/minikube-loadbalancer-ip.py) on your terminal.
+[this Python script](https://github.com/Quansight/qhub/blob/dev/tests/scripts/minikube-loadbalancer-ip.py) on your terminal.
 
 
 #### Enable MetalLB

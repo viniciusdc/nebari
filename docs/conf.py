@@ -5,8 +5,8 @@
 
 # -- Project information -----------------------------------------------------
 
-project = "QHub Cloud"
-copyright = "2020, Quansight"
+project = "QHub"
+copyright = "2021, Quansight"
 author = "Quansight"
 
 # The short X.Y version
@@ -87,8 +87,8 @@ html_theme_options = {
             "internal": False,
         },
         {
-            "href": "https://onprem.qhub.dev/",
-            "title": "QHub OnPrem",
+            "href": "https://hpc.qhub.dev/",
+            "title": "QHub HPC",
             "internal": False,
         },
         {"href": "https://pypi.org/project/qhub/", "title": "PyPI", "internal": False,},

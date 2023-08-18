@@ -6,7 +6,7 @@ terraform {
 
 locals {
   keycloak_custom_themes_config = var.custom_theme_config != null ? jsonencode({
-    extraInitContainers : [
+    extraInitContainers = [
       {
         name  = "git-clone"
         image = "git/git:latest"
@@ -16,7 +16,7 @@ locals {
           var.custom_theme_config.repository_url,
           "/themes",
         ]
-        volumeMounts : [
+        volumeMounts = [
           {
             name      = "custom-themes"
             mountPath = "/themes"
@@ -27,16 +27,16 @@ locals {
           }
         ]
       }
-    ],
-    extraVolumes : [
+    ]
+    extraVolumes = [
       {
         name = "custom-themes"
         persistentVolumeClaim = {
           claimName = "keycloak-git-clone-repo-pvc"
         }
       }
-    ],
-    extraVolumeMounts : [
+    ]
+    extraVolumeMounts = [
       {
         name      = "custom-themes"
         mountPath = "/opt/jboss/keycloak/themes"

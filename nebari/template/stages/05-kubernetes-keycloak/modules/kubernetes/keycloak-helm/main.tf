@@ -10,7 +10,7 @@ locals {
       {
         name = "custom-themes"
         persistentVolumeClaim = {
-          claimName = kubernetes_persistent_volume_claim.keycloak-git-clone-repo-pvc[local.enable_custom_themes].metadata.0.name
+          claimName = "keycloak-git-clone-repo-pvc"
         }
       }
     ],

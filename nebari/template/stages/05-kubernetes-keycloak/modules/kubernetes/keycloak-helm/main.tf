@@ -6,19 +6,19 @@ terraform {
 
 locals {
   keycloak_custom_themes_config = var.keycloak_custom_themes != null ? jsonencode({
-    extraVolumes: [
+    extraVolumes : [
       {
-        name      = "custom-themes"
+        name = "custom-themes"
         persistentVolumeClaim = {
-          claimName = kubernetes_persistent_volume_claim.keycloak-git-clone-repo-pvc.metadata.0.name
+          claimName = kubernetes_persistent_volume_claim.keycloak-git-clone-repo-pvc[count.index].metadata.0.name
         }
       }
     ],
-    extraVolumeMounts: [
+    extraVolumeMounts : [
       {
-        name       = "custom-themes"
-        mountPath  = "/opt/jboss/keycloak/themes"
-        subPath    = "themes"
+        name      = "custom-themes"
+        mountPath = "/opt/jboss/keycloak/themes"
+        subPath   = "themes"
       }
     ]
   }) : jsonencode({})

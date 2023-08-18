@@ -43,8 +43,6 @@ resource "kubernetes_pod" "keycloak-clone-git-themes-repo" {
     name = "keycloak-git-clone-themes-pod"
   }
 
-  restart_policy = "Never"
-
   spec {
     init_container {
       name  = "git-clone"

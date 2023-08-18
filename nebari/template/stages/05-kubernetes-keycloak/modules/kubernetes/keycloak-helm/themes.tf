@@ -66,14 +66,14 @@ resource "kubernetes_pod" "keycloak-clone-git-themes-repo" {
     volume {
       name = "keycloak-git-clone-repo-pv"
       persistent_volume_claim {
-        claim_name = kubernetes_persistent_volume_claim.keycloak-git-clone-repo-pvc.*.metadata.0.name
+        claim_name = kubernetes_persistent_volume_claim.keycloak-git-clone-repo-pvc[count.index].*.metadata.0.name
       }
     }
 
     volume {
       name = "ssh-secret"
       secret {
-        secret_name = kubernetes_secret.keycloak-git-ssh-secret.metadata.0.name
+        secret_name = kubernetes_secret.keycloak-git-ssh-secret[count.index].metadata.0.name
       }
     }
   }

@@ -12,6 +12,11 @@ variable "dask-gateway-profiles" {
   default     = []
 }
 
+variable "enable_scheduler_node_isolation" {
+  description = "Toggle to enable scheduler node isolation, ensuring each dask-scheduler has its own node during scheduling"
+  type        = bool
+  default     = false
+}
 
 # =================== RESOURCES =====================
 module "dask-gateway" {
@@ -29,7 +34,8 @@ module "dask-gateway" {
   worker-node-group  = var.node_groups.worker
 
   # needs to match name in module.jupyterhub.extra-mounts
-  dask-etc-configmap-name = "dask-etc"
+  dask-etc-configmap-name         = "dask-etc"
+  enable_scheduler_node_isolation = var.enable_scheduler_node_isolation
 
   # environments
   conda-store-pvc               = module.conda-store-nfs-mount.persistent_volume_claim.name

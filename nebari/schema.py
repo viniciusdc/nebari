@@ -380,6 +380,15 @@ class JupyterLab(Base):
     idle_culler: typing.Optional[IdleCuller]
 
 
+# ================ DaskGateway ================
+
+
+class DaskGateway(Base):
+    enabled: bool
+    overrides: typing.Optional[typing.Dict]
+    enable_scheduler_node_isolation: typing.Optional[bool]
+
+
 # ================== Profiles ==================
 
 

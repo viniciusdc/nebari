@@ -199,3 +199,10 @@ variable "conda-store-service-name" {
   description = "internal service-name:port where conda-store can be reached"
   type        = string
 }
+
+variable "enable_scheduler_node_isolation" {
+  description = "Toggle to enable scheduler node isolation, ensuring each dask-scheduler has its own node during scheduling"
+  type        = bool
+  default     = false
+}
+

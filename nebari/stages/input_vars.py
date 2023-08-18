@@ -344,6 +344,9 @@ def stage_07_kubernetes_services(stage_outputs, config):
         "dask-worker-image": _split_docker_image_name(
             config["default_images"]["dask_worker"]
         ),
+        "enable_scheduler_node_isolation": config.get("dask_gateway", {}).get(
+            "enable_scheduler_node_isolation", False
+        ),
         "dask-gateway-profiles": config["profiles"]["dask_worker"],
         # monitoring
         "monitoring-enabled": config["monitoring"]["enabled"],

@@ -135,8 +135,35 @@ def base_node_group(options):
         default_node_group if scheduler_node_group is None else scheduler_node_group
     )
 
+    scheduler_extra_pod_config = {"nodeSelector": scheduler_node_group}
+
+    if config.get("cluster-node-isolation"):
+        scheduler_extra_pod_config["affinity"] = {
+            "podAntiAffinity": {
+                "requiredDuringSchedulingIgnoredDuringExecution": [
+                    {
+                        "labelSelector": {
+                            "matchExpressions": [
+                                {
+                                    "key": "app.kubernetes.io/component",
+                                    "operator": "In",
+                                    "values": ["dask-scheduler"],
+                                },
+                                {
+                                    "key": "app.kubernetes.io/name",
+                                    "operator": "In",
+                                    "values": ["dask-gateway"],
+                                },
+                            ]
+                        },
+                        "topologyKey": "kubernetes.io/hostname",
+                    }
+                ]
+            }
+        }
+
     return {
-        "scheduler_extra_pod_config": {"nodeSelector": scheduler_node_group},
+        "scheduler_extra_pod_config": scheduler_extra_pod_config,
         "worker_extra_pod_config": {"nodeSelector": worker_node_group},
     }
 

@@ -16,6 +16,7 @@ resource "kubernetes_secret" "gateway" {
       controller                           = var.controller
       cluster                              = var.cluster
       cluster-image                        = var.cluster-image
+      cluster-node-isolation               = var.enable_scheduler_node_isolation
       profiles                             = var.profiles
       default-conda-store-namespace        = var.default-conda-store-namespace
       conda-store-pvc                      = var.conda-store-pvc

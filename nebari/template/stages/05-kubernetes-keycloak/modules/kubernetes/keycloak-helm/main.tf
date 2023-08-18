@@ -55,10 +55,13 @@ resource "helm_release" "keycloak" {
   values = concat([
     # https://github.com/codecentric/helm-charts/blob/keycloak-15.0.2/charts/keycloak/values.yaml
     file("${path.module}/values.yaml"),
+
     jsonencode({
+
       nodeSelector = {
         "${var.node-group.key}" = var.node-group.value
       }
+
       postgresql = {
         primary = {
           nodeSelector = {
@@ -66,9 +69,13 @@ resource "helm_release" "keycloak" {
           }
         }
       }
-      extraInitContainers = local.extraInitContainers
-      extraVolumes        = local.extraVolumes
-      extraVolumeMounts   = local.extraVolumeMounts
+
+      extraInitContainers = jsonencode(local.extraInitContainers)
+
+      extraVolumes = jsonencode(local.extraVolumes)
+
+      extraVolumeMounts = jsonencode(local.extraVolumeMounts)
+
     }),
   ], var.overrides)
 

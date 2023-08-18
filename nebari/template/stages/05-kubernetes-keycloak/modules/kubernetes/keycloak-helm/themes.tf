@@ -13,7 +13,7 @@ resource "kubernetes_secret" "keycloak-git-ssh-secret" {
 }
 
 resource "kubernetes_persistent_volume_claim" "keycloak-git-clone-repo-pvc" {
-  count = var.custom_theme_config.repo != null ? 1 : 0
+  count = local.enable_custom_themes
 
   metadata {
     name      = "keycloak-git-clone-repo-pvc"
@@ -37,7 +37,7 @@ resource "kubernetes_persistent_volume_claim" "keycloak-git-clone-repo-pvc" {
 }
 
 resource "kubernetes_pod" "keycloak-clone-git-themes-repo" {
-  count = var.custom_theme_config.repo != null ? 1 : 0
+  count = local.enable_custom_themes
 
   metadata {
     name = "keycloak-git-clone-themes-pod"
@@ -75,4 +75,8 @@ resource "kubernetes_pod" "keycloak-clone-git-themes-repo" {
       }
     }
   }
+}
+
+locals {
+  enable_custom_themes = var.keycloak_custom_themes.repo != null ? 1 : 0
 }

@@ -12,7 +12,7 @@ locals {
       command = [
         "git",
         "clone",
-        var.custom_theme_config.repository_url,
+        "${var.custom_theme_config.repository_url}",
         "/themes"
       ]
       volumeMounts = [
@@ -71,55 +71,6 @@ resource "helm_release" "keycloak" {
       extraVolumeMounts   = local.extraVolumeMounts
     }),
   ], var.overrides)
-
-  set {
-    name = "extraInitContainers"
-    value = jsonencode([
-      {
-        name  = "git-clone"
-        image = "git/git:latest"
-        command = [
-          "git",
-          "clone",
-          var.custom_theme_config.repository_url,
-          "/themes"
-        ]
-        volumeMounts = [
-          {
-            name      = "custom-themes"
-            mountPath = "/themes"
-          },
-          {
-            name      = "ssh-secret"
-            mountPath = "/root/.ssh"
-          }
-        ]
-      }
-    ])
-  }
-
-  set {
-    name = "extraVolumes"
-    value = jsonencode([
-      {
-        name = "custom-themes"
-        persistentVolumeClaim = {
-          claimName = "keycloak-git-clone-repo-pvc"
-        }
-      }
-    ])
-  }
-
-  set {
-    name = "extraVolumeMounts"
-    value = jsonencode([
-      {
-        name      = "custom-themes"
-        mountPath = "/opt/jboss/keycloak/themes"
-        subPath   = "themes"
-      }
-    ])
-  }
 
   set {
     name  = "nebari_bot_password"

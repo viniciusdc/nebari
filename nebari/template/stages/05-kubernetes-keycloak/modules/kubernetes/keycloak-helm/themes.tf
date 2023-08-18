@@ -40,24 +40,13 @@ resource "kubernetes_pod" "keycloak-clone-git-themes-repo" {
   count = local.enable_custom_themes
 
   metadata {
-    name = "keycloak-git-clone-themes-pod"
+    name = "keycloak-clone-git-themes-repo"
   }
 
   spec {
     init_container {
-      name  = "git-clone"
-      image = "git/git:latest"
-
-      volume_mount {
-        name       = "keycloak-git-clone-repo-pv"
-        mount_path = "/themes"
-      }
-
-      volume_mount {
-        name       = "ssh-secret"
-        mount_path = "/root/.ssh"
-      }
-
+      name    = "git-clone"
+      image   = "git/git:latest"
       command = ["git", "clone", var.custom_theme_config.repository_url, "/themes"]
     }
 

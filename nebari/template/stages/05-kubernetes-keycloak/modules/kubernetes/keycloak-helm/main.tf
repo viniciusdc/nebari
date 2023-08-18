@@ -69,13 +69,6 @@ resource "helm_release" "keycloak" {
           }
         }
       }
-
-      extraInitContainers = jsonencode(local.extraInitContainers)
-
-      extraVolumes = jsonencode(local.extraVolumes)
-
-      extraVolumeMounts = jsonencode(local.extraVolumeMounts)
-
     }),
   ], var.overrides)
 
@@ -87,6 +80,21 @@ resource "helm_release" "keycloak" {
   set {
     name  = "initial_root_password"
     value = var.initial-root-password
+  }
+
+  set {
+    name  = "extraInitContainers"
+    value = jsonencode(local.extraInitContainers)
+  }
+
+  set {
+    name  = "extraVolumes"
+    value = jsonencode(local.extraVolumes)
+  }
+
+  set {
+    name  = "extraVolumeMounts"
+    value = jsonencode(local.extraVolumeMounts)
   }
 }
 

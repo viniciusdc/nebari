@@ -16,6 +16,8 @@ resource "kubernetes_config_map" "keycloak-custom-themes" {
 }
 
 module "kubernetes-keycloak-helm" {
+  experiments = [module_variable_optional_attrs]
+
   source = "./modules/kubernetes/keycloak-helm"
 
   namespace = var.environment

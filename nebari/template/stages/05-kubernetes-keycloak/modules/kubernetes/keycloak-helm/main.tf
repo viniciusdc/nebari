@@ -4,6 +4,46 @@ terraform {
   experiments = [module_variable_optional_attrs]
 }
 
+locals {
+  extraInitContainers = var.custom_theme_config != null ? [
+    {
+      name  = "git-clone"
+      image = "git/git:latest"
+      command = [
+        "git",
+        "clone",
+        var.custom_theme_config.repository_url,
+        "/themes"
+      ]
+      volumeMounts = [
+        {
+          name      = "custom-themes"
+          mountPath = "/themes"
+        },
+        {
+          name      = "ssh-secret"
+          mountPath = "/root/.ssh"
+        }
+      ]
+    }
+  ] : []
+  extraVolumes = var.custom_theme_config != null ? [
+    {
+      name = "custom-themes"
+      persistentVolumeClaim = {
+        claimName = "keycloak-git-clone-repo-pvc"
+      }
+    }
+  ] : []
+  extraVolumeMounts = var.custom_theme_config != null ? [
+    {
+      name      = "custom-themes"
+      mountPath = "/opt/jboss/keycloak/themes"
+      subPath   = "themes"
+    }
+  ] : []
+}
+
 resource "helm_release" "keycloak" {
   name      = "keycloak"
   namespace = var.namespace
@@ -26,6 +66,9 @@ resource "helm_release" "keycloak" {
           }
         }
       }
+      extraInitContainers = local.extraInitContainers
+      extraVolumes        = local.extraVolumes
+      extraVolumeMounts   = local.extraVolumeMounts
     }),
   ], var.overrides)
 
@@ -39,7 +82,7 @@ resource "helm_release" "keycloak" {
           "git",
           "clone",
           var.custom_theme_config.repository_url,
-          "/themes",
+          "/themes"
         ]
         volumeMounts = [
           {

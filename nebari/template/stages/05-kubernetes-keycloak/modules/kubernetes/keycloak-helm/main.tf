@@ -4,48 +4,6 @@ terraform {
   experiments = [module_variable_optional_attrs]
 }
 
-locals {
-  keycloak_custom_themes_config = var.custom_theme_config != null ? jsonencode({
-    extraInitContainers = [
-      {
-        name  = "git-clone"
-        image = "git/git:latest"
-        command = [
-          "git",
-          "clone",
-          var.custom_theme_config.repository_url,
-          "/themes",
-        ]
-        volumeMounts = [
-          {
-            name      = "custom-themes"
-            mountPath = "/themes"
-          },
-          {
-            name      = "ssh-secret"
-            mountPath = "/root/.ssh"
-          }
-        ]
-      }
-    ]
-    extraVolumes = [
-      {
-        name = "custom-themes"
-        persistentVolumeClaim = {
-          claimName = "keycloak-git-clone-repo-pvc"
-        }
-      }
-    ]
-    extraVolumeMounts = [
-      {
-        name      = "custom-themes"
-        mountPath = "/opt/jboss/keycloak/themes"
-        subPath   = "themes"
-      }
-    ]
-  }) : jsonencode({})
-}
-
 resource "helm_release" "keycloak" {
   name      = "keycloak"
   namespace = var.namespace
@@ -69,8 +27,56 @@ resource "helm_release" "keycloak" {
         }
       }
     }),
-    local.keycloak_custom_themes_config,
   ], var.overrides)
+
+  set {
+    name = "extraInitContainers"
+    value = jsonencode([
+      {
+        name  = "git-clone"
+        image = "git/git:latest"
+        command = [
+          "git",
+          "clone",
+          var.custom_theme_config.repository_url,
+          "/themes",
+        ]
+        volumeMounts = [
+          {
+            name      = "custom-themes"
+            mountPath = "/themes"
+          },
+          {
+            name      = "ssh-secret"
+            mountPath = "/root/.ssh"
+          }
+        ]
+      }
+    ])
+  }
+
+  set {
+    name = "extraVolumes"
+    value = jsonencode([
+      {
+        name = "custom-themes"
+        persistentVolumeClaim = {
+          claimName = "keycloak-git-clone-repo-pvc"
+        }
+      }
+    ])
+  }
+
+  set {
+    name = "extraVolumeMounts"
+    value = jsonencode([
+      {
+        name      = "custom-themes"
+        mountPath = "/opt/jboss/keycloak/themes"
+        subPath   = "themes"
+      }
+    ])
+  }
 
   set {
     name  = "nebari_bot_password"

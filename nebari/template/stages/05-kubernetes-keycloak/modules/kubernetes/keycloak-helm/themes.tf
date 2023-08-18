@@ -1,5 +1,5 @@
 resource "kubernetes_secret" "keycloak-git-ssh-secret" {
-  count = var.custom_theme_config.ssh_key != null ? 1 : 0
+  count = var.custom_theme_config != null ? 1 : 0
 
   metadata {
     name      = "keycloak-git-ssh-secret"
@@ -78,5 +78,5 @@ resource "kubernetes_pod" "keycloak-clone-git-themes-repo" {
 }
 
 locals {
-  enable_custom_themes = var.custom_theme_config.repo != null ? 1 : 0
+  enable_custom_themes = var.custom_theme_config != null ? 1 : 0
 }

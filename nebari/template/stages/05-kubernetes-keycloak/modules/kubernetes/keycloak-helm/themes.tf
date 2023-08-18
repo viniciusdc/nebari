@@ -1,31 +1,31 @@
 resource "kubernetes_secret" "keycloak-git-ssh-secret" {
-    count = var.keycloak_custom_themes.ssh_key != null ? 1 : 0
+  count = var.custom_theme_config.ssh_key != null ? 1 : 0
 
-    metadata {
-        name      = "keycloak-git-ssh-secret"
-        namespace = var.namespace
-    }
+  metadata {
+    name      = "keycloak-git-ssh-secret"
+    namespace = var.namespace
+  }
 
-    data = {
-        # assuming the private key was base64 encoded
-        "id_rsa" = var.keycloak_custom_themes.ssh_key
+  data = {
+    # assuming the private key was base64 encoded
+    "id_rsa" = var.custom_theme_config.ssh_key
   }
 }
 
 resource "kubernetes_persistent_volume" "keycloak-git-clone-repo-pv" {
-  count = var.keycloak_custom_themes.repo != null ? 1 : 0
+  count = var.custom_theme_config.repo != null ? 1 : 0
 
   metadata {
     name = "keycloak-git-clone-repo-pv"
   }
 
   spec {
-    access_modes = ["ReadWriteOnce"]
     capacity {
-      storage = "10Gi"
+      storage = "4Gi"
     }
+    access_modes                     = ["ReadWriteOnce"]
     persistent_volume_reclaim_policy = "Retain"
-
+    storage_class_name               = "standard"
     host_path {
       path = "/themes"
     }
@@ -33,7 +33,7 @@ resource "kubernetes_persistent_volume" "keycloak-git-clone-repo-pv" {
 }
 
 resource "kubernetes_persistent_volume_claim" "keycloak-git-clone-repo-pvc" {
-  count = var.keycloak_custom_themes.repo != null ? 1 : 0
+  count = var.custom_theme_config.repo != null ? 1 : 0
 
   metadata {
     name      = "keycloak-git-clone-repo-pvc"
@@ -44,16 +44,15 @@ resource "kubernetes_persistent_volume_claim" "keycloak-git-clone-repo-pvc" {
     access_modes = ["ReadWriteOnce"]
     resources {
       requests = {
-        storage = "10Gi"
+        storage = kubernetes_persistent_volume.keycloak-git-clone-repo-pv.*.spec.0.capacity.0.storage
       }
     }
-
-    volume_name = kubernetes_persistent_volume.keycloak-git-clone-repo-pv.*.metadata.0.name
+    storage_class_name = kubernetes_persistent_volume.keycloak-git-clone-repo-pv.*.spec.0.storage_class_name
   }
 }
 
 resource "kubernetes_pod" "keycloak-clone-git-themes-repo" {
-  count = var.keycloak_custom_themes.repo != null ? 1 : 0
+  count = var.custom_theme_config.repo != null ? 1 : 0
 
   metadata {
     name = "keycloak-git-clone-themes-pod"
@@ -76,7 +75,7 @@ resource "kubernetes_pod" "keycloak-clone-git-themes-repo" {
         mount_path = "/root/.ssh"
       }
 
-      command = ["git", "clone", var.keycloak_custom_themes.repo, "/themes"]
+      command = ["git", "clone", var.custom_theme_config.repo, "/themes"]
     }
 
     volume {

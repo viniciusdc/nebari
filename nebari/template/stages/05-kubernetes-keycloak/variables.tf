@@ -37,7 +37,8 @@ variable "node-group" {
 variable "keycloak_custom_theme" {
   description = "Keycloak custom theme configuration"
   type = object({
-    repository_url = string
+    repository_url = optional(string)
     ssh_key        = optional(string)
   })
+  default = null
 }

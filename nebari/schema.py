@@ -600,6 +600,7 @@ class Main(Base):
     terraform_state: typing.Optional[TerraformState]
     certificate: Certificate
     helm_extensions: typing.Optional[typing.List[HelmExtension]]
+    dask_gateway: typing.Optional[DaskGateway]
     prefect: typing.Optional[Prefect]
     cdsdashboards: CDSDashboards
     security: Security

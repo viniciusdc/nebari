@@ -32,7 +32,7 @@ resource "kubernetes_persistent_volume_claim" "keycloak-git-clone-repo-pvc" {
         storage = "4Gi"
       }
     }
-    storage_class_name = "default"
+    storage_class_name = "standard"
   }
 }
 

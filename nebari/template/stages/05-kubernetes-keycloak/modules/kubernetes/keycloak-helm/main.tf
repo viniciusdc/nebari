@@ -6,6 +6,28 @@ terraform {
 
 locals {
   keycloak_custom_themes_config = var.custom_theme_config != null ? jsonencode({
+    extraInitContainers : [
+      {
+        name  = "git-clone"
+        image = "git/git:latest"
+        command = [
+          "git",
+          "clone",
+          var.custom_theme_config.repository_url,
+          "/themes",
+        ]
+        volumeMounts = [
+          {
+            name      = "custom-themes"
+            mountPath = "/themes"
+          },
+          {
+            name      = "ssh-secret"
+            mountPath = "/root/.ssh"
+          }
+        ]
+      }
+    ],
     extraVolumes : [
       {
         name = "custom-themes"

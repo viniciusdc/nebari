@@ -5,7 +5,7 @@ terraform {
 }
 
 locals {
-  keycloak_custom_themes_config = var.keycloak_custom_themes != null ? jsonencode({
+  keycloak_custom_themes_config = var.custom_theme_config != null ? jsonencode({
     extraVolumes : [
       {
         name = "custom-themes"

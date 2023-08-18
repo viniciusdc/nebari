@@ -12,42 +12,27 @@ resource "kubernetes_secret" "keycloak-git-ssh-secret" {
   }
 }
 
-resource "kubernetes_persistent_volume" "keycloak-git-clone-repo-pv" {
-  count = var.custom_theme_config.repo != null ? 1 : 0
-
-  metadata {
-    name = "keycloak-git-clone-repo-pv"
-  }
-
-  spec {
-    capacity {
-      storage = "4Gi"
-    }
-    access_modes                     = ["ReadWriteOnce"]
-    persistent_volume_reclaim_policy = "Retain"
-    storage_class_name               = "standard"
-    host_path {
-      path = "/themes"
-    }
-  }
-}
-
 resource "kubernetes_persistent_volume_claim" "keycloak-git-clone-repo-pvc" {
   count = var.custom_theme_config.repo != null ? 1 : 0
 
   metadata {
     name      = "keycloak-git-clone-repo-pvc"
     namespace = var.namespace
+
+    labels = {
+      "app"        = "keycloak-git-clone-repo-pvc"
+      "managed-by" = "keycloak"
+    }
   }
 
   spec {
     access_modes = ["ReadWriteOnce"]
     resources {
       requests = {
-        storage = kubernetes_persistent_volume.keycloak-git-clone-repo-pv.*.spec.0.capacity.0.storage
+        storage = "4Gi"
       }
     }
-    storage_class_name = kubernetes_persistent_volume.keycloak-git-clone-repo-pv.*.spec.0.storage_class_name
+    storage_class_name = "default"
   }
 }
 

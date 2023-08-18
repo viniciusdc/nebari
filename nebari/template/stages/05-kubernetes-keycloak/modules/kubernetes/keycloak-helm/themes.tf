@@ -78,5 +78,5 @@ resource "kubernetes_pod" "keycloak-clone-git-themes-repo" {
 }
 
 locals {
-  enable_custom_themes = var.keycloak_custom_themes.repo != null ? 1 : 0
+  enable_custom_themes = var.custom_theme_config.repo != null ? 1 : 0
 }

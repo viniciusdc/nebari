@@ -16,7 +16,7 @@ locals {
           var.custom_theme_config.repository_url,
           "/themes",
         ]
-        volumeMounts = [
+        volumeMounts : [
           {
             name      = "custom-themes"
             mountPath = "/themes"

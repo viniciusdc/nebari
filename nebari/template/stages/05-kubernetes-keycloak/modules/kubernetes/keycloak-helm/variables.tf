@@ -31,3 +31,8 @@ variable "node-group" {
     value = string
   })
 }
+
+variable "custom_theme_config" {
+  description = "Keycloak custom theme configuration"
+  default = null
+}

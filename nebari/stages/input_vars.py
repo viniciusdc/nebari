@@ -231,6 +231,9 @@ def stage_05_kubernetes_keycloak(stage_outputs, config):
             json.dumps(config["security"].get("keycloak", {}).get("overrides", {}))
         ],
         "node-group": _calculate_node_groups(config)["general"],
+        "keycloak_custom_theme": config["security"]
+        .get("keycloak", {})
+        .get("custom_theme", {}),
     }
 
 

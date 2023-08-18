@@ -1,3 +1,23 @@
+locals {
+  keycloak_custom_themes_config = var.keycloak_custom_themes != null ? jsonencode({
+    extraVolumes: [
+      {
+        name      = "custom-themes"
+        persistentVolumeClaim = {
+          claimName = kubernetes_persistent_volume_claim.keycloak-git-clone-repo-pvc.metadata.0.name
+        }
+      }
+    ],
+    extraVolumeMounts: [
+      {
+        name       = "custom-themes"
+        mountPath  = "/opt/jboss/keycloak/themes"
+        subPath    = "themes"
+      }
+    ]
+  }) : jsonencode({})
+}
+
 resource "helm_release" "keycloak" {
   name      = "keycloak"
   namespace = var.namespace
@@ -20,7 +40,8 @@ resource "helm_release" "keycloak" {
           }
         }
       }
-    })
+    }),
+    local.keycloak_custom_themes_config,
   ], var.overrides)
 
   set {

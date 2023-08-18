@@ -1,3 +1,9 @@
+terraform {
+  # Optional attributes and the defaults function are # both
+  # experimental, so we must opt in to the experiment.
+  experiments = [module_variable_optional_attrs]
+}
+
 resource "random_password" "keycloak-nebari-bot-password" {
   length  = 32
   special = false
@@ -16,8 +22,6 @@ resource "kubernetes_config_map" "keycloak-custom-themes" {
 }
 
 module "kubernetes-keycloak-helm" {
-  experiments = [module_variable_optional_attrs]
-
   source = "./modules/kubernetes/keycloak-helm"
 
   namespace = var.environment

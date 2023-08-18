@@ -1,3 +1,9 @@
+terraform {
+  # Optional attributes and the defaults function are # both
+  # experimental, so we must opt in to the experiment.
+  experiments = [module_variable_optional_attrs]
+}
+
 locals {
   keycloak_custom_themes_config = var.keycloak_custom_themes != null ? jsonencode({
     extraVolumes: [

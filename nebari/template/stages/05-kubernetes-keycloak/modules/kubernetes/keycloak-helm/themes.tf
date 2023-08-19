@@ -70,9 +70,13 @@ resource "kubernetes_job" "git_clone_job" {
             mount_path = "/themes"
           }
 
-          volume_mount {
-            name       = "ssh-secret"
-            mount_path = "/root/.ssh"
+          dynamic "volume_mount" {
+            for_each = var.custom_theme_config.ssh_key != null ? [1] : []
+            content {
+              name       = "ssh-secret"
+              mount_path = "/root/.ssh"
+              read_only  = true
+            }
           }
 
           command = [

@@ -5,6 +5,24 @@ terraform {
 }
 
 
+locals {
+  extraVolumeMounts = var.custom_theme_config != null ? [
+    {
+      name      = "custom-theme"
+      mountPath = "/opt/jboss/keycloak/themes"
+      subPath   = "themes"
+    }
+  ] : []
+  extraVolumes = var.custom_theme_config != null ? [
+    {
+      name = "custom-theme"
+      persistentVolumeClaim = {
+        claimName = "keycloak-git-clone-repo-pvc"
+      }
+    }
+  ] : []
+}
+
 resource "helm_release" "keycloak" {
   name      = "keycloak"
   namespace = var.namespace
@@ -30,6 +48,11 @@ resource "helm_release" "keycloak" {
           }
         }
       }
+
+      extraVolumeMounts = local.extraVolumeMounts
+
+      extraVolumes = local.extraVolumes
+
     }),
   ], var.overrides)
 
@@ -43,34 +66,34 @@ resource "helm_release" "keycloak" {
     value = var.initial-root-password
   }
 
-  dynamic "set" {
-    for_each = var.custom_theme_config != null ? [1] : []
-    content {
-      name = "extraVolumes"
-      value = jsonencode(
-        {
-          name = "custom-theme"
-          persistentVolumeClaim = {
-            claimName = "keycloak-git-clone-repo-pvc"
-          }
-        }
-      )
-    }
-  }
+  # dynamic "set" {
+  #   for_each = var.custom_theme_config != null ? [1] : []
+  #   content {
+  #     name = "extraVolumes"
+  #     value = jsonencode(
+  #       {
+  #         name = "custom-theme"
+  #         persistentVolumeClaim = {
+  #           claimName = "keycloak-git-clone-repo-pvc"
+  #         }
+  #       }
+  #     )
+  #   }
+  # }
 
-  dynamic "set" {
-    for_each = var.custom_theme_config != null ? [1] : []
-    content {
-      name = "extraVolumeMounts"
-      value = jsonencode(
-        {
-          name      = "custom-theme"
-          mountPath = "/opt/jboss/keycloak/themes"
-          subPath   = "themes"
-        }
-      )
-    }
-  }
+  # dynamic "set" {
+  #   for_each = var.custom_theme_config != null ? [1] : []
+  #   content {
+  #     name = "extraVolumeMounts"
+  #     value = jsonencode(
+  #       {
+  #         name      = "custom-theme"
+  #         mountPath = "/opt/jboss/keycloak/themes"
+  #         subPath   = "themes"
+  #       }
+  #     )
+  #   }
+  # }
 
 }
 

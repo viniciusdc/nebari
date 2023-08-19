@@ -8,16 +8,16 @@ terraform {
 locals {
   extraVolumeMounts = var.custom_theme_config != null ? [
     {
-      name      = "custom-theme"
-      mountPath = "/opt/jboss/keycloak/themes"
-      subPath   = "themes"
+      name : "custom-theme",
+      mountPath : "/opt/jboss/keycloak/themes",
+      subPath : "themes"
     }
   ] : []
   extraVolumes = var.custom_theme_config != null ? [
     {
-      name = "custom-theme"
-      persistentVolumeClaim = {
-        claimName = "keycloak-git-clone-repo-pvc"
+      name = "custom-theme",
+      persistentVolumeClaim : {
+        claimName : "keycloak-git-clone-repo-pvc"
       }
     }
   ] : []

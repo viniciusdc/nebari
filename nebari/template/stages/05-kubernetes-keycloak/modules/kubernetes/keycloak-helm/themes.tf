@@ -51,8 +51,7 @@ resource "kubernetes_job" "git_clone_job" {
     template {
 
       metadata {
-        name      = "git-clone-job"
-        namespace = var.namespace
+        name = "git-clone-job"
 
         labels = {
           "app"        = "git-clone-job"

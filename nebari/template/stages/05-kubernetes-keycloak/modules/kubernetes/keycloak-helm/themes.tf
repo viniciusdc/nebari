@@ -13,7 +13,6 @@ resource "kubernetes_secret" "keycloak-git-ssh-secret" {
 }
 
 resource "kubernetes_persistent_volume_claim" "keycloak-git-clone-repo-pvc" {
-  count = local.enable_custom_themes
 
   metadata {
     name      = "keycloak-git-clone-repo-pvc"

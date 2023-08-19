@@ -5,23 +5,6 @@ terraform {
 }
 
 
-locals {
-  extraVolumeMounts = var.custom_theme_config != null ? [
-    {
-      name : "custom-theme",
-      mountPath : "/opt/jboss/keycloak/themes",
-    }
-  ] : []
-  extraVolumes = var.custom_theme_config != null ? [
-    {
-      name = "custom-theme",
-      persistentVolumeClaim : {
-        claimName : "keycloak-git-clone-repo-pvc"
-      }
-    }
-  ] : []
-}
-
 resource "helm_release" "keycloak" {
   name      = "keycloak"
   namespace = var.namespace
@@ -47,11 +30,6 @@ resource "helm_release" "keycloak" {
           }
         }
       }
-
-      extraVolumeMounts = jsonencode(local.extraVolumeMounts)
-
-      extraVolumes = jsonencode(local.extraVolumes)
-
     }),
   ], var.overrides)
 
@@ -64,35 +42,6 @@ resource "helm_release" "keycloak" {
     name  = "initial_root_password"
     value = var.initial-root-password
   }
-
-  # dynamic "set" {
-  #   for_each = var.custom_theme_config != null ? [1] : []
-  #   content {
-  #     name = "extraVolumes"
-  #     value = jsonencode(
-  #       {
-  #         name = "custom-theme"
-  #         persistentVolumeClaim = {
-  #           claimName = "keycloak-git-clone-repo-pvc"
-  #         }
-  #       }
-  #     )
-  #   }
-  # }
-
-  # dynamic "set" {
-  #   for_each = var.custom_theme_config != null ? [1] : []
-  #   content {
-  #     name = "extraVolumeMounts"
-  #     value = jsonencode(
-  #       {
-  #         name      = "custom-theme"
-  #         mountPath = "/opt/jboss/keycloak/themes"
-  #         subPath   = "themes"
-  #       }
-  #     )
-  #   }
-  # }
 
 }
 

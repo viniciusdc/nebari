@@ -10,7 +10,6 @@ locals {
     {
       name : "custom-theme",
       mountPath : "/opt/jboss/keycloak/themes",
-      subPath : "themes"
     }
   ] : []
   extraVolumes = var.custom_theme_config != null ? [

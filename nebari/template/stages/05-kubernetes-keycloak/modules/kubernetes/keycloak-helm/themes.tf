@@ -66,7 +66,7 @@ resource "kubernetes_job" "git_clone_job" {
 
           volume_mount {
             name       = "custom-themes"
-            mount_path = "/themes"
+            mount_path = "/opt/data/custom-themes"
           }
 
           dynamic "volume_mount" {
@@ -81,7 +81,7 @@ resource "kubernetes_job" "git_clone_job" {
           command = [
             "sh",
             "-c",
-            "if [ ! -d /themes/.git ]; then git clone ${var.custom_theme_config.repository_url} /themes; else git -C /themes pull; fi"
+            "if [ ! -d /opt/data/custom-themes/themes/.git ]; then cd /opt/data/custom-themes && git clone ${var.custom_theme_config.repository_url} themes; else cd /opt/data/custom-themes && git -C /opt/data/custom-themes/themes pull; fi"
           ]
         }
 

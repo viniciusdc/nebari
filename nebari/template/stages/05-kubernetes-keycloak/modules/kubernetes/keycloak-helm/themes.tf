@@ -49,6 +49,17 @@ resource "kubernetes_job" "git_clone_job" {
     backoff_limit = 0
 
     template {
+
+      metadata {
+        name      = "git-clone-job"
+        namespace = var.namespace
+
+        labels = {
+          "app"        = "git-clone-job"
+          "managed-by" = "keycloak"
+        }
+      }
+
       spec {
         restart_policy = "Never"
         init_container {
@@ -80,7 +91,7 @@ resource "kubernetes_job" "git_clone_job" {
         }
 
         dynamic "volume" {
-          for_each = var.keycloak_custom_theme.ssh_key != null ? [1] : []
+          for_each = var.custom_theme_config.ssh_key != null ? [1] : []
           content {
             name = "ssh-secret"
             secret {

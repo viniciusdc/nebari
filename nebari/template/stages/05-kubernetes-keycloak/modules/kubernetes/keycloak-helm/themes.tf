@@ -62,7 +62,7 @@ resource "kubernetes_job" "git_clone_job" {
 
         container {
           name  = "git-clone"
-          image = "git/git:latest"
+          image = "bitnami/git:latest"
 
           volume_mount {
             name       = "custom-themes"

@@ -49,10 +49,8 @@ resource "kubernetes_job" "git_clone_job" {
     backoff_limit = 0
 
     template {
-
       metadata {
         name = "git-clone-job"
-
         labels = {
           "app"        = "git-clone-job"
           "managed-by" = "keycloak"
@@ -61,7 +59,8 @@ resource "kubernetes_job" "git_clone_job" {
 
       spec {
         restart_policy = "Never"
-        init_container {
+
+        container {
           name  = "git-clone"
           image = "git/git:latest"
 
@@ -106,6 +105,7 @@ resource "kubernetes_job" "git_clone_job" {
     }
   }
 }
+
 
 
 

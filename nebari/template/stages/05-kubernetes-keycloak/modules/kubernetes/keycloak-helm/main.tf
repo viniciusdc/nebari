@@ -49,9 +49,9 @@ resource "helm_release" "keycloak" {
         }
       }
 
-      extraVolumeMounts = local.extraVolumeMounts
+      extraVolumeMounts = jsonencode(local.extraVolumeMounts)
 
-      extraVolumes = local.extraVolumes
+      extraVolumes = jsonencode(local.extraVolumes)
 
     }),
   ], var.overrides)

@@ -44,7 +44,7 @@ resource "helm_release" "keycloak" {
   }
 
   dynamic "set" {
-    for_each = var.keycloak_custom_theme != null ? [1] : []
+    for_each = var.custom_theme_config != null ? [1] : []
     content {
       name = "extraVolumes"
       value = jsonencode(
@@ -59,7 +59,7 @@ resource "helm_release" "keycloak" {
   }
 
   dynamic "set" {
-    for_each = var.keycloak_custom_theme != null ? [1] : []
+    for_each = var.custom_theme_config != null ? [1] : []
     content {
       name = "extraVolumesMounts"
       value = jsonencode(

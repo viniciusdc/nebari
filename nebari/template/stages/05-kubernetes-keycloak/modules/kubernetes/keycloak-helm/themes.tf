@@ -41,11 +41,13 @@ resource "kubernetes_job" "git_clone_job" {
   count = local.enable_custom_themes
 
   metadata {
-    name = "git-clone-job"
+    name      = "git-clone-job"
+    namespace = var.namespace
   }
 
   spec {
     backoff_limit = 0
+
     template {
       spec {
         restart_policy = "Never"

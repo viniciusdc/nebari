@@ -39,7 +39,7 @@ extraVolumeMounts: |
     mountPath: /opt/jboss/keycloak/providers/
   - name: custom-theme
     mountPath: /opt/jboss/keycloak/themes/
-    readOnly: true
+    subPath: /themes
 
 extraVolumes: |
   - name: metrics-plugin

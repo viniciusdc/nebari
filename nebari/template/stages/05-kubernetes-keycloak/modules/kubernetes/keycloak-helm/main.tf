@@ -4,45 +4,6 @@ terraform {
   experiments = [module_variable_optional_attrs]
 }
 
-locals {
-  extraInitContainers = var.custom_theme_config != null ? [
-    {
-      name  = "git-clone"
-      image = "git/git:latest"
-      command = [
-        "git",
-        "clone",
-        "${var.custom_theme_config.repository_url}",
-        "/themes"
-      ]
-      volumeMounts = [
-        {
-          name      = "custom-themes"
-          mountPath = "/themes"
-        },
-        {
-          name      = "ssh-secret"
-          mountPath = "/root/.ssh"
-        }
-      ]
-    }
-  ] : []
-  extraVolumes = var.custom_theme_config != null ? [
-    {
-      name = "custom-themes"
-      persistentVolumeClaim = {
-        claimName = "keycloak-git-clone-repo-pvc"
-      }
-    }
-  ] : []
-  extraVolumeMounts = var.custom_theme_config != null ? [
-    {
-      name      = "custom-themes"
-      mountPath = "/opt/jboss/keycloak/themes"
-      subPath   = "themes"
-    }
-  ] : []
-}
 
 resource "helm_release" "keycloak" {
   name      = "keycloak"
@@ -82,19 +43,33 @@ resource "helm_release" "keycloak" {
     value = var.initial-root-password
   }
 
-  set {
-    name  = "extraInitContainers"
-    value = jsonencode(local.extraInitContainers)
+  dynamic "set" {
+    for_each = var.keycloak_custom_theme != null ? [1] : []
+    content {
+      name = "extraVolumes"
+      value = jsonencode(
+        {
+          name = "custom-theme"
+          persistentVolumeClaim = {
+            claimName = "keycloak-git-clone-repo-pvc"
+          }
+        }
+      )
+    }
   }
 
-  set {
-    name  = "extraVolumes"
-    value = jsonencode(local.extraVolumes)
-  }
-
-  set {
-    name  = "extraVolumeMounts"
-    value = jsonencode(local.extraVolumeMounts)
+  dynamic "set" {
+    for_each = var.keycloak_custom_theme != null ? [1] : []
+    content {
+      name = "extraVolumesMounts"
+      value = jsonencode(
+        {
+          name      = "custom-theme"
+          mountPath = "/opt/jboss/keycloak/themes"
+          subPath   = "themes"
+        }
+      )
+    }
   }
 }
 

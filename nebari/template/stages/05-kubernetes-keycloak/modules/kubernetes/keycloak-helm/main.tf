@@ -23,37 +23,6 @@ locals {
       }
     ]
   }
-  extraInitContainers = var.custom_theme_config != null ? yamlencode([
-    local.keycloak_base_jar_container,
-    {
-      name  = "git-clone"
-      image = "bitnami/git:latest"
-      volumeMounts = [
-        {
-          name      = "custom-themes"
-          mountPath = "/opt/data/custom-themes"
-        },
-        {
-          name      = "update-git-clone-repo"
-          mountPath = "/scripts",
-          readOnly  = true
-        },
-        {
-          name      = "keycloak-git-clone-repo-ssh-key"
-          mountPath = "/opt/data/keys/.ssh"
-        }
-      ]
-      command = [
-        "sh",
-        "-c",
-        "mkdir -p ~/.ssh && cp /opt/data/keys/.ssh/keycloak-theme-ssh.pem ~/.ssh/keycloak-theme-ssh.pem && chmod 600 ~/.ssh/keycloak-theme-ssh.pem && /scripts/update-git-clone-repo.sh",
-        var.custom_theme_config.repository_url,
-        "ssh-key-enabled",
-      ]
-    }
-    ]) : yamlencode([
-    local.keycloak_base_jar_container
-  ])
 }
 
 
@@ -83,26 +52,21 @@ resource "helm_release" "keycloak" {
       startupScripts = {
         "mv-custom-themes.sh" = file("${path.module}/files/mv-custom-themes.sh")
       }
+
       extraInitContainers = local.extraInitContainers
+
       extraVolumes = yamlencode([
         {
-          name = "custom-themes"
-          persistentVolumeClaim = {
-            claimName = "keycloak-git-clone-repo-pvc"
-          }
+          name     = "custom-themes"
+          emptyDir = {}
         },
         {
-          name = "keycloak-git-clone-repo-ssh-key"
+          name = "keycloak-git-sync-ssh-key"
           secret = {
-            secretName  = "keycloak-git-clone-repo-ssh-key"
-            defaultMode = 420 # not working. need to fix
+            defaultMode = 256
+            secretName  = "keycloak-git-sync-ssh-key"
           }
         },
-        {
-          name = "update-git-clone-repo"
-          configMap = {
-            name = "update-git-clone-repo"
-        } },
         {
           name = "metrics-plugin"
           secret = {

@@ -1,50 +1,66 @@
-
-# create kubernetes secret for ssh key to be mounted at init container later
-resource "kubernetes_secret" "keycloak-git-clone-repo-ssh-key" {
+# Pre-create secret for git-sync ssh key, should be updated with new key if changed
+resource "kubernetes_secret" "keycloak-git-sync-ssh-key" {
   metadata {
-    name      = "keycloak-git-clone-repo-ssh-key"
+    name      = "keycloak-git-sync-ssh-key"
     namespace = var.namespace
   }
   data = {
-    "keycloak-theme-ssh.pem" = local.ssh_key_enabled != null ? file("${local.ssh_key_enabled}") : ""
-    type                     = "Opaque"
+    "ssh-privatekey" = var.custom_theme_config.ssh_key != null ? filebase64(var.custom_theme_config.ssh_key.path) : ""
+    "known_hosts"    = var.custom_theme_config.ssh_key != null ? filebase64(var.custom_theme_config.ssh_key.known_hosts_path) : ""
   }
 }
-
-resource "kubernetes_config_map" "update-git-clone-repo" {
-  metadata {
-    name      = "update-git-clone-repo"
-    namespace = var.namespace
-  }
-  data = {
-    "update-git-clone-repo.sh" = file("${path.module}/files/theme-repo-clonning.sh")
-  }
-}
-
-resource "kubernetes_persistent_volume_claim" "keycloak-git-clone-repo-pvc" {
-  metadata {
-    name      = "keycloak-git-clone-repo-pvc"
-    namespace = var.namespace
-
-    labels = {
-      "app"        = "keycloak-git-clone-repo-pvc"
-      "managed-by" = "keycloak"
-    }
-  }
-
-  spec {
-    access_modes = ["ReadWriteOnce"]
-    resources {
-      requests = {
-        storage = "4Gi"
-      }
-    }
-    storage_class_name = "standard"
-  }
-}
-
 
 locals {
-  enable_custom_themes = var.custom_theme_config != null ? 1 : 0
-  ssh_key_enabled      = try(length(var.custom_theme_config), 0) > 0 ? var.custom_theme_config.ssh_key : null
+  extraInitContainers = var.custom_theme_config.repository_url != null ? yamlencode([
+    local.keycloak_base_jar_container,
+    {
+      name  = "keycloak-git-sync"
+      image = "k8s.gcr.io/git-sync:v3.1.5"
+      volumeMounts = [
+        {
+          name      = "custom-themes"
+          mountPath = "/opt/data/custom-themes"
+        },
+        {
+          name      = "keycloak-git-sync-ssh-key"
+          mountPath = "/etc/git-secret"
+        }
+
+      ]
+      securityContext = {
+        runAsUser = 0
+      }
+      env = [
+        {
+          name  = "GIT_SYNC_REPO"
+          value = var.custom_theme_config.repository_url
+        },
+        {
+          name  = "GIT_SYNC_BRANCH"
+          value = var.custom_theme_config.repository_branch != null ? var.custom_theme_config.repository_branch : "main"
+        },
+        {
+          name  = "GIT_SYNC_ONE_TIME"
+          value = "true"
+        },
+        {
+          name  = "GIT_SYNC_GROUP_WRITE"
+          value = "true"
+        },
+        {
+          name  = "GIT_SYNC_ROOT"
+          value = "/opt/data/custom-themes"
+        },
+        {
+          name  = "GIT_SYNC_DEST"
+          value = "themes"
+        },
+        {
+          name  = "GIT_SYNC_SSH"
+          value = var.custom_theme_config.ssh_key != null ? "true" : "false"
+      }]
+    }
+    ]) : yamlencode([
+    local.keycloak_base_jar_container
+  ])
 }

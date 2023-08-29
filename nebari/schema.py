@@ -228,20 +228,25 @@ class GitHubAuthentication(Authentication):
 # ================= Keycloak ==================
 
 
+class KeycloakThemeSSHKey(Base):
+    path: typing.Optional[str]
+    known_hosts_path: typing.Optional[str]
+
+
 class keycloakTheme(Base):
     """
     This class is used to define the custom theme for Keycloak based on a git repository. The content of the repository will then be mounted in the Keycloak pod.
     """
 
     repository_url: str
-    ssh_key: typing.Optional[str]
+    repository_branch: typing.Optional[str]
+    ssh_key: typing.Optional[KeycloakThemeSSHKey]
 
 
 class Keycloak(Base):
     initial_root_password: typing.Optional[str]
     overrides: typing.Optional[typing.Dict]
     realm_display_name: typing.Optional[str]
-    custom_theme: typing.Optional[keycloakTheme]
 
 
 # ============== Security ================
@@ -353,6 +358,7 @@ class ExistingProvider(Base):
 
 
 class Theme(Base):
+    keycloak: typing.Optional[keycloakTheme]
     jupyterhub: typing.Dict[str, typing.Union[str, list]]
 
 

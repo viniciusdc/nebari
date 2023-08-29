@@ -4,15 +4,27 @@ terraform {
   experiments = [module_variable_optional_attrs]
 }
 
-
 locals {
-  sshKeyVolumeConfig = var.custom_theme_config != null ? {
-    name = "ssh-secret"
-    secret = {
-      secretName = "keycloak-git-ssh-secret"
+  keycloak_base_jar_container = {
+    name  = "keycloak-base-jar"
+    image = "busybox:1.31"
+    command = [
+      "sh",
+      "-c",
+      "mkdir -p /opt/jboss/keycloak/providers/ && cp /opt/keycloak/providers/keycloak-metrics-spi-2.5.3.jar /opt/jboss/keycloak/providers/keycloak-metrics-spi-2.5.3.jar && chown 1000:1000 /opt/jboss/keycloak/providers/keycloak-metrics-spi-2.5.3.jar && chmod 777 /opt/jboss/keycloak/providers/keycloak-metrics-spi-2.5.3.jar",
+    ]
+    securityContext = {
+      runAsUser = 0
     }
-  } : {}
-  extraInitContainersTheming = var.custom_theme_config != null ? yamlencode([
+    volumeMounts = [
+      {
+        name      = "metrics-plugin"
+        mountPath = "/opt/keycloak/providers/"
+      }
+    ]
+  }
+  extraInitContainers = var.custom_theme_config != null ? yamlencode([
+    local.keycloak_base_jar_container,
     {
       name  = "git-clone"
       image = "bitnami/git:latest"
@@ -22,34 +34,26 @@ locals {
           mountPath = "/opt/data/custom-themes"
         },
         {
-          name      = "ssh-secret"
-          mountPath = "/root/.ssh"
+          name      = "update-git-clone-repo"
+          mountPath = "/scripts",
           readOnly  = true
+        },
+        {
+          name      = "keycloak-git-clone-repo-ssh-key"
+          mountPath = "/opt/data/keys/.ssh"
         }
       ]
       command = [
         "sh",
         "-c",
-        "if [ ! -d /opt/data/custom-themes/themes/.git ]; then cd /opt/data/custom-themes && git clone ${var.custom_theme_config.repository_url} themes; else cd /opt/data/custom-themes && git -C /opt/data/custom-themes/themes pull; fi"
+        "mkdir -p ~/.ssh && cp /opt/data/keys/.ssh/keycloak-theme-ssh.pem ~/.ssh/keycloak-theme-ssh.pem && chmod 600 ~/.ssh/keycloak-theme-ssh.pem && /scripts/update-git-clone-repo.sh",
+        var.custom_theme_config.repository_url,
+        "ssh-key-enabled",
       ]
     }
-  ]) : ""
-  #   {
-  #     name  = "git-clone"
-  #     image = "bitnami/git:latest"
-  #     volumeMounts = [
-  #       {
-  #         name      = "custom-themes"
-  #         mountPath = "/opt/data/custom-themes"
-  #       }
-  #     ]
-  #     command = [
-  #       "sh",
-  #       "-c",
-  #       "if [ ! -d /opt/data/custom-themes/themes/.git ]; then cd /opt/data/custom-themes && git clone ${var.custom_theme_config.repository_url} themes; else cd /opt/data/custom-themes && git -C /opt/data/custom-themes/themes pull; fi"
-  #     ]
-  #   }
-  # ] : []
+    ]) : yamlencode([
+    local.keycloak_base_jar_container
+  ])
 }
 
 
@@ -79,7 +83,7 @@ resource "helm_release" "keycloak" {
       startupScripts = {
         "mv-custom-themes.sh" = file("${path.module}/files/mv-custom-themes.sh")
       }
-      extraInitContainers = local.extraInitContainersTheming
+      extraInitContainers = local.extraInitContainers
       extraVolumes = yamlencode([
         {
           name = "custom-themes"
@@ -87,13 +91,34 @@ resource "helm_release" "keycloak" {
             claimName = "keycloak-git-clone-repo-pvc"
           }
         },
-        local.sshKeyVolumeConfig
+        {
+          name = "keycloak-git-clone-repo-ssh-key"
+          secret = {
+            secretName  = "keycloak-git-clone-repo-ssh-key"
+            defaultMode = 420 # not working. need to fix
+          }
+        },
+        {
+          name = "update-git-clone-repo"
+          configMap = {
+            name = "update-git-clone-repo"
+        } },
+        {
+          name = "metrics-plugin"
+          secret = {
+            secretName = "keycloak-metrics-plugin"
+          }
+        }
       ])
       extraVolumeMounts = yamlencode([
         {
           name      = "custom-themes"
           mountPath = "/opt/data/themes/"
           subPath   = "themes"
+        },
+        {
+          name      = "metrics-plugin"
+          mountPath = "/opt/jboss/keycloak/providers/"
         }
       ])
     }),

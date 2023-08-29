@@ -40,5 +40,8 @@ variable "keycloak_custom_theme" {
     repository_url = optional(string)
     ssh_key        = optional(string)
   })
-  default = null
+  default = {
+    repository_url = null
+    ssh_key        = null
+  }
 }

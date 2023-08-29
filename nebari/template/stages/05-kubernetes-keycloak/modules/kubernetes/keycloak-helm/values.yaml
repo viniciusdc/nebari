@@ -15,12 +15,6 @@ startupScripts:
   keycloak.cli: |
     {{- .Files.Get "scripts/keycloak.cli" | nindent 2 }}
 
-  mv-custom-themes.sh: |
-    #!/bin/sh
-
-    echo 'Copying custom themes from /opt/data/themes to /opt/jboss/keycloak/themes'
-    cp -r /opt/data/themes/* /opt/jboss/keycloak/themes/
-
   nebariadminuser.sh: |
     /opt/jboss/keycloak/bin/add-user-keycloak.sh -r master -u root -p "{{ .Values.initial_root_password }}"
     /opt/jboss/keycloak/bin/add-user-keycloak.sh -r master -u nebari-bot -p "{{ .Values.nebari_bot_password }}"
@@ -43,17 +37,11 @@ extraInitContainers: |
 extraVolumeMounts: |
   - name: metrics-plugin
     mountPath: /opt/jboss/keycloak/providers/
-  - name: custom-theme
-    mountPath: /opt/data/themes/
-    subPath: themes
 
 extraVolumes: |
   - name: metrics-plugin
     secret:
       secretName: keycloak-metrics-plugin
-  - name: custom-theme
-    persistentVolumeClaim:
-      claimName: keycloak-git-clone-repo-pvc
 
 secrets:
   metrics-plugin:

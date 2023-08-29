@@ -4,6 +4,42 @@ terraform {
   experiments = [module_variable_optional_attrs]
 }
 
+locals {
+  extraInitContainersTheming = var.custom_theme_config != null ? yamlencode([
+    {
+      name  = "git-clone"
+      image = "bitnami/git:latest"
+      volumeMounts = [
+        {
+          name      = "custom-themes"
+          mountPath = "/opt/data/custom-themes"
+        }
+      ]
+      command = [
+        "sh",
+        "-c",
+        "if [ ! -d /opt/data/custom-themes/themes/.git ]; then cd /opt/data/custom-themes && git clone ${var.custom_theme_config.repository_url} themes; else cd /opt/data/custom-themes && git -C /opt/data/custom-themes/themes pull; fi"
+      ]
+    }
+  ]) : ""
+  #   {
+  #     name  = "git-clone"
+  #     image = "bitnami/git:latest"
+  #     volumeMounts = [
+  #       {
+  #         name      = "custom-themes"
+  #         mountPath = "/opt/data/custom-themes"
+  #       }
+  #     ]
+  #     command = [
+  #       "sh",
+  #       "-c",
+  #       "if [ ! -d /opt/data/custom-themes/themes/.git ]; then cd /opt/data/custom-themes && git clone ${var.custom_theme_config.repository_url} themes; else cd /opt/data/custom-themes && git -C /opt/data/custom-themes/themes pull; fi"
+  #     ]
+  #   }
+  # ] : []
+}
+
 
 resource "helm_release" "keycloak" {
   name      = "keycloak"
@@ -16,13 +52,10 @@ resource "helm_release" "keycloak" {
   values = concat([
     # https://github.com/codecentric/helm-charts/blob/keycloak-15.0.2/charts/keycloak/values.yaml
     file("${path.module}/values.yaml"),
-
     jsonencode({
-
       nodeSelector = {
         "${var.node-group.key}" = var.node-group.value
       }
-
       postgresql = {
         primary = {
           nodeSelector = {
@@ -30,6 +63,26 @@ resource "helm_release" "keycloak" {
           }
         }
       }
+      # Custom theme configuration for keycloak
+      startupScripts = {
+        "mv-custom-themes.sh" = file("${path.module}/files/mv-custom-themes.sh")
+      }
+      extraInitContainers = local.extraInitContainersTheming
+      extraVolumes = yamlencode([
+        {
+          name = "custom-themes"
+          persistentVolumeClaim = {
+            claimName = "keycloak-git-clone-repo-pvc"
+          }
+        }
+      ])
+      extraVolumeMounts = yamlencode([
+        {
+          name      = "custom-themes"
+          mountPath = "/opt/data/themes/"
+          subPath   = "themes"
+        }
+      ])
     }),
   ], var.overrides)
 

@@ -4,7 +4,14 @@ terraform {
   experiments = [module_variable_optional_attrs]
 }
 
+
 locals {
+  sshKeyVolumeConfig = var.custom_theme_config != null ? {
+    name = "ssh-secret"
+    secret = {
+      secretName = "keycloak-git-ssh-secret"
+    }
+  } : {}
   extraInitContainersTheming = var.custom_theme_config != null ? yamlencode([
     {
       name  = "git-clone"
@@ -13,6 +20,11 @@ locals {
         {
           name      = "custom-themes"
           mountPath = "/opt/data/custom-themes"
+        },
+        {
+          name      = "ssh-secret"
+          mountPath = "/root/.ssh"
+          readOnly  = true
         }
       ]
       command = [
@@ -74,7 +86,8 @@ resource "helm_release" "keycloak" {
           persistentVolumeClaim = {
             claimName = "keycloak-git-clone-repo-pvc"
           }
-        }
+        },
+        local.sshKeyVolumeConfig
       ])
       extraVolumeMounts = yamlencode([
         {

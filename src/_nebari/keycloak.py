@@ -1,16 +1,58 @@
 import json
 import logging
 import os
+from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
+
+from pydantic.typing import AbstractSetIntStr, MappingIntStrAny, MappingStrAny
 
 import keycloak
 import requests
 import rich
+from pydantic import BaseModel, EmailStr, Extra
 
 from _nebari.stages.kubernetes_ingress import CertificateEnum
 from nebari import schema
 
 logger = logging.getLogger(__name__)
+
+
+class GroupRepresentation(BaseModel):
+    id: Optional[str] = None
+    name: Optional[str] = "Developer"
+    path: Optional[str] = "/developer"
+    subGroups: Optional[List["GroupRepresentation"]] = None
+
+
+class UserConfigRepresentation(BaseModel):
+    id: Optional[str] = None
+    username: EmailStr
+    enabled: bool
+    emailVerified: Optional[bool]
+    firstName: Optional[str]
+    lastName: Optional[str]
+    email: EmailStr
+    groups: Optional[List[GroupRepresentation]] = [GroupRepresentation().path]
+    attributes: Optional[MappingStrAny] = None
+
+    class Config:
+        allow_population_by_field_name = True
+        extra = Extra.allow
+
+
+class CreateUserRepresentation(UserConfigRepresentation):
+    credentials: List[Dict[str, Any]] = None
+
+    class Config:
+        extra = Extra.allow
+
+    def dict(self, **kwargs):
+        d = super().dict(**kwargs)
+        # Filter out any keys that are not part of the model's fields
+        return {k: v for k, v in d.items() if k in self.__fields_set__}
+
+
+# TODO: Refactor this to enable caching of the authentication token
 
 
 def do_keycloak(config: schema.Main, *args):
@@ -36,6 +78,18 @@ def do_keycloak(config: schema.Main, *args):
         raise ValueError(f"unknown keycloak command {args[0]}")
 
 
+def create_group(
+    keycloak_admin: keycloak.KeycloakAdmin,
+    name: str,
+    path: str = None,
+    subGroups: List[GroupRepresentation] = None,
+):
+    payload = GroupRepresentation(name=name, path=path, subGroups=subGroups)
+    group = keycloak_admin.create_group(payload.dict(), skip_exists=True)
+    rich.print(f"Created group=[green]{name}[/green]")
+    return group
+
+
 def create_user(
     keycloak_admin: keycloak.KeycloakAdmin,
     username: str,
@@ -45,21 +99,21 @@ def create_user(
     domain=None,
     enabled=True,
 ):
-    payload = {
-        "username": username,
-        "groups": groups or ["/developer"],
-        "email": email or f"{username}@{domain or 'example.com'}",
-        "enabled": enabled,
-    }
+    payload = CreateUserRepresentation(
+        username=username,
+        groups=groups,
+        email=email or f"{username}@{domain or 'example.com'}",
+        enabled=enabled,
+    )
     if password:
-        payload["credentials"] = [
+        payload.credentials = [
             {"type": "password", "value": password, "temporary": False}
         ]
     else:
         rich.print(
             f"Creating user=[green]{username}[/green] without password (none supplied)"
         )
-    user = keycloak_admin.create_user(payload)
+    user = keycloak_admin.create_user(payload.dict())
     rich.print(f"Created user=[green]{username}[/green]")
     return user
 
@@ -73,10 +127,11 @@ def list_users(keycloak_admin: keycloak.KeycloakAdmin):
     print("-" * 120)
 
     for user in keycloak_admin.get_users():
-        user_groups = [_["name"] for _ in keycloak_admin.get_user_groups(user["id"])]
+        _user = UserConfigRepresentation(**user)
+        _user.groups = [_["name"] for _ in keycloak_admin.get_user_groups(_user.id)]
         print(
             user_format.format(
-                username=user["username"], email=user["email"], groups=user_groups
+                username=_user.username, email=_user.email, groups=_user.groups
             )
         )
 
@@ -179,6 +234,9 @@ def keycloak_rest_api_call(config: schema.Main = None, request: str = None):
         raise e
 
 
+# TODO: Replace this for the python-keycloak library api calls
+
+
 def export_keycloak_users(config: schema.Main, realm: str):
     request = f"GET /{realm}/users"
 
@@ -188,3 +246,66 @@ def export_keycloak_users(config: schema.Main, realm: str):
         "realm": realm,
         "users": users,
     }
+
+
+def export_keycloak_users_and_groups(
+    config: schema.Main, realm: str, group_membership: bool = False
+):
+    request = f"GET /{realm}/users"
+
+    users = keycloak_rest_api_call(config, request=request)
+
+    if group_membership:
+        # Ask for confirmation before proceeding if the number of users is large
+        if len(users) > 10:
+            if not rich.prompt.Confirm.ask(
+                f"Exporting group membership for {len(users)} users. Continue? (This operation may take a while) [y/N]"
+            ):
+                return
+        for user in users:
+            user_id = user["id"]
+            request = f"GET /{realm}/users/{user_id}/groups"
+            user_groups = keycloak_rest_api_call(config, request=request)
+            user["groups"] = user_groups
+
+    request = f"GET /{realm}/groups"
+
+    groups = keycloak_rest_api_call(config, request=request)
+
+    return {
+        "realm": realm,
+        "users": users,
+        "groups": groups,
+    }
+
+
+def import_keycloak_user_and_groups(
+    config: schema.Main,
+    realm: str,
+    users: List[Dict[str, Any]],
+    groups: List[Dict[str, Any]],
+):
+    # for group in groups:
+    #     request = f"POST /{realm}/groups"
+    #     keycloak_rest_api_call(config, request=request)
+
+    #     group_id = group["id"]
+    #     request = f"PUT /{realm}/groups/{group_id}"
+    #     keycloak_rest_api_call(config, request=request)
+
+    #     for user in group["users"]:
+    #         request = f"POST /{realm}/groups/{group_id}/users/{user['id']}"
+    #         keycloak_rest_api_call(config, request=request)
+    # for user in users:
+    #     request = f"POST /{realm}/users"
+    #     keycloak_rest_api_call(config, request=request)
+
+    #     user_id = user["id"]
+    #     request = f"PUT /{realm}/users/{user_id}"
+    #     keycloak_rest_api_call(config, request=request)
+
+    #     for group in user["groups"]:
+    #         request = f"POST /{realm}/users/{user_id}/groups/{group['id']}"
+    #         keycloak_rest_api_call(config, request=request)
+
+    return True

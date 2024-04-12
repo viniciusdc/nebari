@@ -5,7 +5,12 @@ from typing import Tuple
 import typer
 
 from _nebari.config import read_configuration
-from _nebari.keycloak import do_keycloak, export_keycloak_users
+from _nebari.keycloak import (
+    do_keycloak,
+    export_keycloak_users,
+    export_keycloak_users_and_groups,
+    import_keycloak_user_and_groups,
+)
 from nebari.hookspecs import hookimpl
 
 
@@ -75,11 +80,44 @@ def nebari_subcommand(cli: typer.Typer):
             "--realm",
             help="realm from which users are to be exported",
         ),
+        group_membership: bool = typer.Option(
+            False,
+            "--groups",
+            help="export groups and group membership along with users",
+        ),
     ):
         """Export the users in Keycloak."""
         from nebari.plugins import nebari_plugin_manager
 
         config_schema = nebari_plugin_manager.config_schema
         config = read_configuration(config_filename, config_schema=config_schema)
-        r = export_keycloak_users(config, realm=realm)
+        if group_membership:
+            r = export_keycloak_users_and_groups(config, realm=realm)
+        else:
+            r = export_keycloak_users(config, realm=realm)
         print(json.dumps(r, indent=4))
+
+    @app_keycloak.command(name="import-users")
+    def import_users(
+        config_filename: pathlib.Path = typer.Option(
+            ...,
+            "-c",
+            "--config",
+            help="nebari configuration file path",
+        ),
+        realm: str = typer.Option(
+            "nebari",
+            "--realm",
+            help="realm to which users are to be imported",
+        ),
+        realm_export: pathlib.Path = typer.Option(
+            ...,
+            "--users",
+            help="path to the file containing users and their details to be imported",
+        ),
+    ):
+        """Import the users in Keycloak."""
+        from nebari.plugins import nebari_plugin_manager
+
+        config_schema = nebari_plugin_manager.config_schema
+        config = read_configuration(config_filename, config_schema=config_schema)

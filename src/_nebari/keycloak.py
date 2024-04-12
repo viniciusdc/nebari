@@ -1,10 +1,8 @@
 import json
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Mapping
 from urllib.parse import urljoin
-
-from pydantic.typing import AbstractSetIntStr, MappingIntStrAny, MappingStrAny
 
 import keycloak
 import requests
@@ -33,7 +31,7 @@ class UserConfigRepresentation(BaseModel):
     lastName: Optional[str]
     email: EmailStr
     groups: Optional[List[GroupRepresentation]] = [GroupRepresentation().path]
-    attributes: Optional[MappingStrAny] = None
+    attributes: Optional[Mapping[str, Any]] = None
 
     class Config:
         allow_population_by_field_name = True

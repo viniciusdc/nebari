@@ -4,10 +4,7 @@ requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = [
-    "src/_nebari",
-    "src/nebari",
-]
+packages = ["src/_nebari", "src/nebari"]
 
 [tool.hatch.version]
 source = "vcs"
@@ -28,15 +25,7 @@ license = "BSD-3-Clause"
 authors = [
     { name = "Nebari development team", email = "internal-it@quansight.com" },
 ]
-keywords = [
-    "aws",
-    "gcp",
-    "do",
-    "azure",
-    "nebari",
-    "dask",
-    "jupyter",
-]
+keywords = ["aws", "gcp", "do", "azure", "nebari", "dask", "jupyter"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -63,7 +52,7 @@ dependencies = [
     "kubernetes==27.2.0",
     "pluggy==1.3.0",
     "prompt-toolkit==3.0.36",
-    "pydantic==1.10.12",
+    "pydantic[email]==1.10.12",
     "pynacl==1.5.0",
     "python-keycloak>=3.9.0",
     "questionary==2.0.0",
@@ -95,10 +84,7 @@ dev = [
     "setuptools==63.4.3",
     "tqdm",
 ]
-docs = [
-    "sphinx",
-    "sphinx_click",
-]
+docs = ["sphinx", "sphinx_click"]
 
 [project.urls]
 Documentation = "https://www.nebari.dev/docs"
@@ -110,12 +96,9 @@ nebari = "nebari.__main__:main"
 [tool.mypy]
 warn_return_any = true
 warn_unused_configs = true
-files = [
-    "src/_nebari",
-    "src/nebari",
-]
+files = ["src/_nebari", "src/nebari"]
 exclude = [
-    "src/_nebari/stages/kubernetes_services/template" # skip traitlets configuration files
+    "src/_nebari/stages/kubernetes_services/template", # skip traitlets configuration files
 ]
 
 [[tool.mypy.overrides]]
@@ -136,21 +119,13 @@ module = [
 ignore_missing_imports = true
 
 [tool.ruff]
-select = [
-    "E",
-    "F",
-    "PTH",
-]
+select = ["E", "F", "PTH"]
 ignore = [
-    "E501", # Line too long
-    "F821", # Undefined name
+    "E501",   # Line too long
+    "F821",   # Undefined name
     "PTH123", # open() should be replaced by Path.open()
 ]
-extend-exclude = [
-    "src/_nebari/template",
-    "home",
-    "__pycache__"
-]
+extend-exclude = ["src/_nebari/template", "home", "__pycache__"]
 
 [tool.coverage.run]
 branch = true
@@ -172,5 +147,5 @@ exclude_also = [
 
     # Don't complain about abstract methods, they aren't run:
     "@(abc\\.)?abstractmethod",
-    ]
+]
 ignore_errors = false

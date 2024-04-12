@@ -72,6 +72,8 @@ def do_keycloak(config: schema.Main, *args):
         create_user(keycloak_admin, username, password, domain=config.domain)
     elif args[0] == "listusers":
         list_users(keycloak_admin)
+    elif args[0] == "listgroups":
+        list_groups(keycloak_admin)
     else:
         raise ValueError(f"unknown keycloak command {args[0]}")
 
@@ -130,6 +132,23 @@ def list_users(keycloak_admin: keycloak.KeycloakAdmin):
         print(
             user_format.format(
                 username=_user.username, email=_user.email, groups=_user.groups
+            )
+        )
+
+
+def list_groups(keycloak_admin: keycloak.KeycloakAdmin):
+    num_groups = keycloak_admin.groups_count().get("count")
+    print(f"{num_groups} Keycloak Groups")
+
+    group_format = "{name:32} | {path:32} | {subGroups}"
+    print(group_format.format(name="name", path="path", subGroups="subGroups"))
+    print("-" * 120)
+
+    for group in keycloak_admin.get_groups():
+        _group = GroupRepresentation(**group)
+        print(
+            group_format.format(
+                name=_group.name, path=_group.path, subGroups=_group.subGroups
             )
         )
 

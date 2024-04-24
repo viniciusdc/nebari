@@ -46,6 +46,7 @@ data*
 
 # ignore nebari files
 nebari-config.yaml
+_version.py
 
 .vscode/
 .pytest_cache

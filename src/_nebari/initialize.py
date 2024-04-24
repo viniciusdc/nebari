@@ -9,10 +9,10 @@ import pydantic
 import requests
 
 from _nebari import constants
-from _nebari.provider import git
 
 # from _nebari.provider.cicd import github
-from _nebari.provider import github
+from _nebari.provider import git
+from _nebari.provider.git import github
 from _nebari.provider.cloud import (
     amazon_web_services,
     azure_cloud,

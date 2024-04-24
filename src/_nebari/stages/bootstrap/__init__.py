@@ -7,8 +7,7 @@ from typing import Dict, List, Type
 
 from _nebari.provider.cicd.gitlab import gen_gitlab_ci
 
-# from _nebari.provider.cicd.github import gen_nebari_linter, gen_nebari_ops
-from _nebari.provider.github.cicd import gen_nebari_linter, gen_nebari_ops
+from _nebari.provider.git.github.cicd import gen_nebari_linter, gen_nebari_ops
 from nebari import schema
 from nebari.hookspecs import NebariStage, hookimpl
 

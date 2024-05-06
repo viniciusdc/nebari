@@ -8,6 +8,9 @@ from ruamel.yaml import yaml_object
 from _nebari.utils import escape_string, yaml
 from _nebari.version import __version__, rounded_ver_parse
 
+# cleandoc is a function from the textwrap module
+from inspect import cleandoc
+
 # Regex for suitable project names
 project_name_regex = r"^[A-Za-z][A-Za-z0-9\-_]{1,14}[A-Za-z0-9]$"
 project_name_pydantic = Annotated[str, StringConstraints(pattern=project_name_regex)]
@@ -44,14 +47,73 @@ class ProviderEnum(str, enum.Enum):
 
 
 class Main(Base):
-    project_name: project_name_pydantic
-    namespace: namespace_pydantic = "dev"
-    provider: ProviderEnum = ProviderEnum.local
-    # In nebari_version only use major.minor.patch version - drop any pre/post/dev suffixes
-    nebari_version: Annotated[str, Field(validate_default=True)] = __version__
+    project_name: str = Field(
+        ...,
+        pattern=project_name_regex,
+        description=cleandoc(
+            """
+            Determines the base name for all major infrastructure related resources on
+            Nebari. Should be compatible with the Cloud provider's naming conventions.
+            See [Project Naming
+            Conventions](#docs/explanations/config-best-practices#naming-conventions)
+            for more details.
+        """
+        ),
+    )
+    namespace: str = Field(
+        default="dev",
+        pattern=namespace_regex,
+        description=cleandoc(
+            """
+            Used in combination with `project_name` to label infrastructure related
+            resources on Nebari and also determines the target
+            [namespace](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)
+            used when deploying kubernetes resources. Defaults to `dev`.
+        """
+        ),
+    )
+    provider: ProviderEnum = Field(
+        default=ProviderEnum.local,
+        description=cleandoc(
+            """
+            Determines the cloud provider used to deploy infrastructure related
+            resources on Nebari.
 
-    prevent_deploy: bool = (
-        False  # Optional, but will be given default value if not present
+            Possible values are:
+            - `local`: Used for local development and testing.
+            - `existing`: Used for existing infrastructure.
+            - `do`: Used for DigitalOcean.
+            - `aws`: Used for Amazon Web Services.
+            - `gcp`: Used for Google Cloud Platform.
+
+            For more information on the different providers, see [Nebari Deployment
+            Platforms](#docs/get-started/deploy). Defaults to `local`.
+        """
+        ),
+    )
+    nebari_version: str = Field(
+        default=__version__,
+        description=cleandoc(
+            """
+            The current installed version of Nebari. This is used to determine if the
+            schema's version, the user must run `nebari upgrade` to ensure
+            compatibility.
+
+            :note: You will get a validation error if the version of nebari used from
+            the command line is different from the one in the nebari-config.yaml.
+        """
+        ),
+    )
+    prevent_deploy: bool = Field(
+        default=False,
+        description=cleandoc(
+            """
+            Controls whether deployment is blocked post-upgrade. Setting this field to
+            'True' helps ensure that users do not inadvertently redeploy without being
+            aware of necessary configurations and updates, thus safeguarding the
+            stability and integrity of the deployment. Defaults to 'False'.
+        """
+        ),
     )
 
     # If the nebari_version in the schema is old

@@ -1395,7 +1395,7 @@
           "type": "string"
         },
         "version": {
-          "default": "v2024.4.2.dev3+g2f85ece2.d20240501",
+          "default": "v2024.4.2.dev9+ge8c41430.d20240506",
           "title": "Version",
           "type": "string"
         },
@@ -1969,7 +1969,7 @@
             }
           ],
           "default": {
-            "initial_root_password": "6f5oh0aa5apyxog0",
+            "initial_root_password": "jedb9fk1pqoc22al",
             "overrides": {},
             "realm_display_name": "Nebari"
           }
@@ -2084,7 +2084,7 @@
             "secondary_color": "#957da6",
             "secondary_color_dark": "#957da6",
             "text_color": "#111111",
-            "version": "v2024.4.2.dev3+g2f85ece2.d20240501",
+            "version": "v2024.4.2.dev9+ge8c41430.d20240506",
             "welcome": "Welcome! Learn about Nebari's features and configurations in <a href=\"https://www.nebari.dev/docs\">the documentation</a>. If you have any questions or feedback, reach the team on <a href=\"https://www.nebari.dev/docs/community#getting-support\">Nebari's support forums</a>."
           }
         }
@@ -2159,7 +2159,7 @@
           "secondary_color": "#957da6",
           "secondary_color_dark": "#957da6",
           "text_color": "#111111",
-          "version": "v2024.4.2.dev3+g2f85ece2.d20240501",
+          "version": "v2024.4.2.dev9+ge8c41430.d20240506",
           "welcome": "Welcome! Learn about Nebari's features and configurations in <a href=\"https://www.nebari.dev/docs\">the documentation</a>. If you have any questions or feedback, reach the team on <a href=\"https://www.nebari.dev/docs/community#getting-support\">Nebari's support forums</a>."
         }
       }
@@ -2403,7 +2403,7 @@
           "type": "password"
         },
         "keycloak": {
-          "initial_root_password": "6f5oh0aa5apyxog0",
+          "initial_root_password": "jedb9fk1pqoc22al",
           "overrides": {},
           "realm_display_name": "Nebari"
         },
@@ -2563,12 +2563,14 @@
       }
     },
     "project_name": {
+      "description": "Determines the base name for all major infrastructure related resources on\nNebari. Should be compatible with the Cloud provider's naming conventions.\nSee [Project Naming\nConventions](#docs/explanations/config-best-practices#naming-conventions)\nfor more details.",
       "pattern": "^[A-Za-z][A-Za-z0-9\\-_]{1,14}[A-Za-z0-9]$",
       "title": "Project Name",
       "type": "string"
     },
     "namespace": {
       "default": "dev",
+      "description": "Used in combination with `project_name` to label infrastructure related\nresources on Nebari and also determines the target\n[namespace](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)\nused when deploying kubernetes resources. Defaults to `dev`.",
       "pattern": "^[A-Za-z][A-Za-z\\-_]*[A-Za-z]$",
       "title": "Namespace",
       "type": "string"
@@ -2579,15 +2581,18 @@
           "$ref": "#/$defs/ProviderEnum"
         }
       ],
-      "default": "local"
+      "default": "local",
+      "description": "Determines the cloud provider used to deploy infrastructure related\nresources on Nebari.\n\nPossible values are:\n- `local`: Used for local development and testing.\n- `existing`: Used for existing infrastructure.\n- `do`: Used for DigitalOcean.\n- `aws`: Used for Amazon Web Services.\n- `gcp`: Used for Google Cloud Platform.\n\nFor more information on the different providers, see [Nebari Deployment\nPlatforms](#docs/get-started/deploy). Defaults to `local`."
     },
     "nebari_version": {
-      "default": "2024.4.2.dev3+g2f85ece2.d20240501",
+      "default": "2024.4.2.dev9+ge8c41430.d20240506",
+      "description": "The current installed version of Nebari. This is used to determine if the\nschema's version, the user must run `nebari upgrade` to ensure\ncompatibility.\n\n:note: You will get a validation error if the version of nebari used from\nthe command line is different from the one in the nebari-config.yaml.",
       "title": "Nebari Version",
       "type": "string"
     },
     "prevent_deploy": {
       "default": false,
+      "description": "Controls whether deployment is blocked post-upgrade. Setting this field to\n'True' helps ensure that users do not inadvertently redeploy without being\naware of necessary configurations and updates, thus safeguarding the\nstability and integrity of the deployment. Defaults to 'False'.",
       "title": "Prevent Deploy",
       "type": "boolean"
     }

@@ -55,7 +55,7 @@ class Main(Base):
             Determines the base name for all major infrastructure related resources on
             Nebari. Should be compatible with the Cloud provider's naming conventions.
             See [Project Naming
-            Conventions](#docs/explanations/config-best-practices#naming-conventions)
+            Conventions](/docs/explanations/config-best-practices#naming-conventions)
             for more details.
         """
         ),
@@ -79,8 +79,16 @@ class Main(Base):
             Determines the cloud provider used to deploy infrastructure related
             resources on Nebari.
 
+            Options include:
+            - `local`,
+            - `existing`,
+            - `do`,
+            - `aws`,
+            - `gcp`,
+            - `azure`
+
             For more information on the different providers, see [Nebari Deployment
-            Platforms](#docs/get-started/deploy). Defaults to `local`.
+            Platforms](/docs/get-started/deploy). Defaults to `local`.
         """
         ),
     )

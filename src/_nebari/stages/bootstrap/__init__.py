@@ -4,6 +4,7 @@ import pathlib
 import typing
 from inspect import cleandoc
 from typing import Dict, List, Type
+from pydantic import Field
 
 from _nebari.provider.cicd.github import gen_nebari_linter, gen_nebari_ops
 from _nebari.provider.cicd.gitlab import gen_gitlab_ci
@@ -67,12 +68,68 @@ class CiEnum(str, enum.Enum):
         return representer.represent_str(node.value)
 
 
+# class CICD(schema.Base):
+#     type: CiEnum = CiEnum.none
+#     branch: str = "main"
+#     commit_render: bool = True
+#     before_script: typing.List[typing.Union[str, typing.Dict]] = []
+#     after_script: typing.List[typing.Union[str, typing.Dict]] = []
+
+
 class CICD(schema.Base):
-    type: CiEnum = CiEnum.none
-    branch: str = "main"
-    commit_render: bool = True
-    before_script: typing.List[typing.Union[str, typing.Dict]] = []
-    after_script: typing.List[typing.Union[str, typing.Dict]] = []
+    type: CiEnum = Field(
+        default=CiEnum.none,
+        description=cleandoc(
+            """
+            Specifies the CI/CD provider that is used to automate the deployment of your infrastructure.
+            This enumeration can include options such as GitHub Actions, GitLab CI, Jenkins, etc.
+
+            Valid options include:
+            - 'github-actions'
+            - 'gitlab-ci'
+            - 'none'
+
+            The default is 'none', indicating that no automation is used unless
+            specified.
+            """
+        ),
+    )
+    branch: str = Field(
+        default="main",
+        description=cleandoc(
+            """
+            Defines the version control branch that CI/CD operations should track and use for deployments.
+            The default branch is set to 'main'. This setting is crucial for aligning the CI/CD processes with the correct codebase state.
+            """
+        ),
+    )
+    commit_render: bool = Field(
+        default=True,
+        description=cleandoc(
+            """
+            Determines whether the CI/CD process should automatically commit rendered configuration files or outputs back into the repository.
+            This boolean flag defaults to True, enabling automatic commits to ensure that all changes are version-controlled.
+            """
+        ),
+    )
+    before_script: typing.List[typing.Union[str, typing.Dict]] = Field(
+        default=[],
+        description=cleandoc(
+            """
+            A list of scripts or commands that are executed prior to the main CI/CD pipeline actions.
+            This can include setup scripts, pre-deployment checks, or any preparatory tasks that need to be completed before the main deployment process begins.
+            """
+        ),
+    )
+    after_script: typing.List[typing.Union[str, typing.Dict]] = Field(
+        default=[],
+        description=cleandoc(
+            """
+            A list of scripts or commands that are run after the main CI/CD pipeline actions have completed.
+            This might include cleanup operations, notification sending, or other follow-up actions necessary to finalize the deployment process.
+            """
+        ),
+    )
 
 
 class InputSchema(schema.Base):

@@ -79,13 +79,6 @@ class Main(Base):
             Determines the cloud provider used to deploy infrastructure related
             resources on Nebari.
 
-            Possible values are:
-            - `local`: Used for local development and testing.
-            - `existing`: Used for existing infrastructure.
-            - `do`: Used for DigitalOcean.
-            - `aws`: Used for Amazon Web Services.
-            - `gcp`: Used for Google Cloud Platform.
-
             For more information on the different providers, see [Nebari Deployment
             Platforms](#docs/get-started/deploy). Defaults to `local`.
         """
@@ -98,9 +91,6 @@ class Main(Base):
             The current installed version of Nebari. This is used to determine if the
             schema's version, the user must run `nebari upgrade` to ensure
             compatibility.
-
-            :note: You will get a validation error if the version of nebari used from
-            the command line is different from the one in the nebari-config.yaml.
         """
         ),
     )

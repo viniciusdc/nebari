@@ -26,17 +26,18 @@ DEFAULT_SUBCOMMAND_PLUGINS = [
     "_nebari.subcommands.validate",
 ]
 
+# Commented out while testing, uncomment when ready
 DEFAULT_STAGES_PLUGINS = [
     # stages
     "_nebari.stages.bootstrap",
-    "_nebari.stages.terraform_state",
-    "_nebari.stages.infrastructure",
-    "_nebari.stages.kubernetes_initialize",
-    "_nebari.stages.kubernetes_ingress",
-    "_nebari.stages.kubernetes_keycloak",
-    "_nebari.stages.kubernetes_keycloak_configuration",
-    "_nebari.stages.kubernetes_services",
-    "_nebari.stages.nebari_tf_extensions",
+    # "_nebari.stages.terraform_state",
+    # "_nebari.stages.infrastructure",
+    # "_nebari.stages.kubernetes_initialize",
+    # "_nebari.stages.kubernetes_ingress",
+    # "_nebari.stages.kubernetes_keycloak",
+    # "_nebari.stages.kubernetes_keycloak_configuration",
+    # "_nebari.stages.kubernetes_services",
+    # "_nebari.stages.nebari_tf_extensions",
 ]
 
 

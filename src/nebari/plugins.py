@@ -1,4 +1,5 @@
 import itertools
+import json
 import os
 import re
 import sys
@@ -132,3 +133,18 @@ class NebariPluginManager:
 
 
 nebari_plugin_manager = NebariPluginManager()
+
+
+if __name__ == "__main__":
+    # This is used to generate the model dump for nebari internal use only
+    # and for documentation purposes.
+
+    NEBARI_CONFIG_YAML_SCHEMA_FILE = (
+        Path(__file__).resolve().parents[2] / "nebari-config-schema.json"
+    )
+    model = nebari_plugin_manager.config_schema
+
+    with NEBARI_CONFIG_YAML_SCHEMA_FILE.open(mode="w+") as f:
+        obj = model.model_json_schema()
+        f.write(json.dumps(obj, indent=2))
+        f.write("\n")

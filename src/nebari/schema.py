@@ -77,14 +77,11 @@ class Main(Base):
         description=cleandoc(
             f"""
             Determines the cloud provider used to deploy infrastructure related
-            resources on Nebari.
-
-            Available options include: {', '.join([p.value for p in ProviderEnum])}.
-
-            For more information on the different providers, see [Nebari Deployment
-            Platforms](/docs/get-started/deploy). Defaults to `local`.
+            resources on Nebari. For more information on the different providers, see
+            [Nebari Deployment Platforms](/docs/get-started/deploy).
         """
         ),
+        optionsAre=[provider.value for provider in ProviderEnum],
     )
     nebari_version: str = Field(
         default=__version__,
@@ -103,7 +100,7 @@ class Main(Base):
             Controls whether deployment is blocked post-upgrade. Setting this field to
             'True' helps ensure that users do not inadvertently redeploy without being
             aware of necessary configurations and updates, thus safeguarding the
-            stability and integrity of the deployment. Defaults to 'False'.
+            stability and integrity of the deployment.
         """
         ),
     )

@@ -75,13 +75,9 @@ class CICD(schema.Base):
             f"""
             Specifies the CI/CD provider that is used to automate the deployment of your infrastructure.
             This enumeration can include options such as GitHub Actions, GitLab CI, Jenkins, etc.
-
-            Valid options include: {', '.join([p.value for p in CiEnum])}.
-
-            The default is 'none', indicating that no automation is used unless
-            specified.
             """
         ),
+        optionsAre=[provider.value for provider in CiEnum],
     )
     branch: str = Field(
         default="main",
@@ -110,18 +106,21 @@ class CICD(schema.Base):
             A list of scripts or commands that are executed prior to the main CI/CD pipeline actions.
             This can include setup scripts, pre-deployment checks, or any preparatory
             tasks that need to be completed before the main deployment process begins.
-
-            For example, this might include installing dependencies, setting up
+            """
+        ),
+        examples=[
+            """
+            This might include installing dependencies, setting up
             environment variables, or running tests.
 
-            ```yaml
+            ```yaml title="before_script example"
             before_script:
               - echo "Running before script"
               - echo "Installing dependencies"
               - pip install -r requirements.txt
             ```
             """
-        ),
+        ],
     )
     after_script: typing.List[typing.Union[str, typing.Dict]] = Field(
         default=[],
@@ -130,23 +129,56 @@ class CICD(schema.Base):
             A list of scripts or commands that are run after the main CI/CD pipeline actions have completed.
             This might include cleanup operations, notification sending, or other
             follow-up actions necessary to finalize the deployment process.
-
-            For example, this might include sending notifications, cleaning up temporary
+            """
+        ),
+        examples=[
+            """
+            This might include sending notifications, cleaning up temporary
             files, or running post-deployment tests.
 
-            ```yaml
+            ```yaml title="after_script example"
             after_script:
               - echo "Running after script"
               - echo "Cleaning up temporary files"
               - rm -rf /tmp/*
             ```
             """
-        ),
+        ],
     )
 
 
 class InputSchema(schema.Base):
-    ci_cd: CICD = CICD()
+    ci_cd: CICD = Field(
+        default_factory=lambda: CICD(),
+        description=cleandoc(
+            """
+            Contains the configuration settings for the CI/CD provider that is used to automate the deployment of your infrastructure.
+            """
+        ),
+        examples=[
+            """
+            Below is an example of a CI/CD configuration that uses GitHub Actions as the
+            provider. The configuration specifies that the CI/CD process should track
+            the 'main' branch, automatically commit rendered configuration files, and
+            run before and after scripts.
+
+            ```yaml title="ci_cd example"
+            ci_cd:
+              type: github-actions
+              branch: main
+              commit_render: true
+              before_script:
+                - echo "Running before script"
+                - echo "Installing dependencies"
+                - pip install -r requirements.txt
+              after_script:
+                - echo "Running after script"
+                - echo "Cleaning up temporary files"
+                - rm -rf /tmp/*
+            ```
+            """
+        ],
+    )
 
 
 class OutputSchema(schema.Base):

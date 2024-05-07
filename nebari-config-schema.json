@@ -10,7 +10,12 @@
             }
           ],
           "default": "none",
-          "description": "Specifies the CI/CD provider that is used to automate the deployment of your infrastructure.\nThis enumeration can include options such as GitHub Actions, GitLab CI, Jenkins, etc.\n\nValid options include: github-actions, gitlab-ci, none.\n\nThe default is 'none', indicating that no automation is used unless\nspecified."
+          "description": "Specifies the CI/CD provider that is used to automate the deployment of your infrastructure.\nThis enumeration can include options such as GitHub Actions, GitLab CI, Jenkins, etc.",
+          "optionsAre": [
+            "github-actions",
+            "gitlab-ci",
+            "none"
+          ]
         },
         "branch": {
           "default": "main",
@@ -26,7 +31,10 @@
         },
         "before_script": {
           "default": [],
-          "description": "A list of scripts or commands that are executed prior to the main CI/CD pipeline actions.\nThis can include setup scripts, pre-deployment checks, or any preparatory\ntasks that need to be completed before the main deployment process begins.\n\nFor example, this might include installing dependencies, setting up\nenvironment variables, or running tests.\n\n```yaml\nbefore_script:\n  - echo \"Running before script\"\n  - echo \"Installing dependencies\"\n  - pip install -r requirements.txt\n```",
+          "description": "A list of scripts or commands that are executed prior to the main CI/CD pipeline actions.\nThis can include setup scripts, pre-deployment checks, or any preparatory\ntasks that need to be completed before the main deployment process begins.",
+          "examples": [
+            "\n            This might include installing dependencies, setting up\n            environment variables, or running tests.\n\n            ```yaml title=\"before_script example\"\n            before_script:\n              - echo \"Running before script\"\n              - echo \"Installing dependencies\"\n              - pip install -r requirements.txt\n            ```\n            "
+          ],
           "items": {
             "anyOf": [
               {
@@ -42,7 +50,10 @@
         },
         "after_script": {
           "default": [],
-          "description": "A list of scripts or commands that are run after the main CI/CD pipeline actions have completed.\nThis might include cleanup operations, notification sending, or other\nfollow-up actions necessary to finalize the deployment process.\n\nFor example, this might include sending notifications, cleaning up temporary\nfiles, or running post-deployment tests.\n\n```yaml\nafter_script:\n  - echo \"Running after script\"\n  - echo \"Cleaning up temporary files\"\n  - rm -rf /tmp/*\n```",
+          "description": "A list of scripts or commands that are run after the main CI/CD pipeline actions have completed.\nThis might include cleanup operations, notification sending, or other\nfollow-up actions necessary to finalize the deployment process.",
+          "examples": [
+            "\n            This might include sending notifications, cleaning up temporary\n            files, or running post-deployment tests.\n\n            ```yaml title=\"after_script example\"\n            after_script:\n              - echo \"Running after script\"\n              - echo \"Cleaning up temporary files\"\n              - rm -rf /tmp/*\n            ```\n            "
+          ],
           "items": {
             "anyOf": [
               {
@@ -90,13 +101,10 @@
           "$ref": "#/$defs/CICD"
         }
       ],
-      "default": {
-        "after_script": [],
-        "before_script": [],
-        "branch": "main",
-        "commit_render": true,
-        "type": "none"
-      }
+      "description": "Contains the configuration settings for the CI/CD provider that is used to automate the deployment of your infrastructure.",
+      "examples": [
+        "\n            Below is an example of a CI/CD configuration that uses GitHub Actions as the\n            provider. The configuration specifies that the CI/CD process should track\n            the 'main' branch, automatically commit rendered configuration files, and\n            run before and after scripts.\n\n            ```yaml title=\"ci_cd example\"\n            ci_cd:\n              type: github-actions\n              branch: main\n              commit_render: true\n              before_script:\n                - echo \"Running before script\"\n                - echo \"Installing dependencies\"\n                - pip install -r requirements.txt\n              after_script:\n                - echo \"Running after script\"\n                - echo \"Cleaning up temporary files\"\n                - rm -rf /tmp/*\n            ```\n            "
+      ]
     },
     "project_name": {
       "description": "Determines the base name for all major infrastructure related resources on\nNebari. Should be compatible with the Cloud provider's naming conventions.\nSee [Project Naming\nConventions](/docs/explanations/config-best-practices#naming-conventions)\nfor more details.",
@@ -118,7 +126,15 @@
         }
       ],
       "default": "local",
-      "description": "Determines the cloud provider used to deploy infrastructure related\nresources on Nebari.\n\nAvailable options include: local, existing, do, aws, gcp, azure.\n\nFor more information on the different providers, see [Nebari Deployment\nPlatforms](/docs/get-started/deploy). Defaults to `local`."
+      "description": "Determines the cloud provider used to deploy infrastructure related\nresources on Nebari. For more information on the different providers, see\n[Nebari Deployment Platforms](/docs/get-started/deploy).",
+      "optionsAre": [
+        "local",
+        "existing",
+        "do",
+        "aws",
+        "gcp",
+        "azure"
+      ]
     },
     "nebari_version": {
       "default": "2024.4.2.dev11+g0f18c614.d20240506",
@@ -128,7 +144,7 @@
     },
     "prevent_deploy": {
       "default": false,
-      "description": "Controls whether deployment is blocked post-upgrade. Setting this field to\n'True' helps ensure that users do not inadvertently redeploy without being\naware of necessary configurations and updates, thus safeguarding the\nstability and integrity of the deployment. Defaults to 'False'.",
+      "description": "Controls whether deployment is blocked post-upgrade. Setting this field to\n'True' helps ensure that users do not inadvertently redeploy without being\naware of necessary configurations and updates, thus safeguarding the\nstability and integrity of the deployment.",
       "title": "Prevent Deploy",
       "type": "boolean"
     }

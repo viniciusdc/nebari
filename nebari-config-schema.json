@@ -99,7 +99,7 @@
       }
     },
     "project_name": {
-      "description": "Determines the base name for all major infrastructure related resources on\nNebari. Should be compatible with the Cloud provider's naming conventions.\nSee [Project Naming\nConventions](#docs/explanations/config-best-practices#naming-conventions)\nfor more details.",
+      "description": "Determines the base name for all major infrastructure related resources on\nNebari. Should be compatible with the Cloud provider's naming conventions.\nSee [Project Naming\nConventions](/docs/explanations/config-best-practices#naming-conventions)\nfor more details.",
       "pattern": "^[A-Za-z][A-Za-z0-9\\-_]{1,14}[A-Za-z0-9]$",
       "title": "Project Name",
       "type": "string"
@@ -118,7 +118,7 @@
         }
       ],
       "default": "local",
-      "description": "Determines the cloud provider used to deploy infrastructure related\nresources on Nebari.\n\nFor more information on the different providers, see [Nebari Deployment\nPlatforms](#docs/get-started/deploy). Defaults to `local`."
+      "description": "Determines the cloud provider used to deploy infrastructure related\nresources on Nebari.\n\nOptions include:\n- `local`,\n- `existing`,\n- `do`,\n- `aws`,\n- `gcp`,\n- `azure`\n\nFor more information on the different providers, see [Nebari Deployment\nPlatforms](/docs/get-started/deploy). Defaults to `local`."
     },
     "nebari_version": {
       "default": "2024.4.2.dev11+g0f18c614.d20240506",

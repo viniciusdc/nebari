@@ -33,7 +33,7 @@
           "default": [],
           "description": "A list of scripts or commands that are executed prior to the main CI/CD pipeline actions.\nThis can include setup scripts, pre-deployment checks, or any preparatory\ntasks that need to be completed before the main deployment process begins.",
           "examples": [
-            "\n            This might include installing dependencies, setting up\n            environment variables, or running tests.\n\n            ```yaml title=\"before_script example\"\n            before_script:\n              - echo \"Running before script\"\n              - echo \"Installing dependencies\"\n              - pip install -r requirements.txt\n            ```\n            "
+            "\n            This might include installing dependencies, setting up\n            environment variables, or running tests.\n\n            ```yaml\n            before_script:\n              - echo \"Running before script\"\n              - echo \"Installing dependencies\"\n              - pip install -r requirements.txt\n            ```\n            "
           ],
           "items": {
             "anyOf": [
@@ -52,7 +52,7 @@
           "default": [],
           "description": "A list of scripts or commands that are run after the main CI/CD pipeline actions have completed.\nThis might include cleanup operations, notification sending, or other\nfollow-up actions necessary to finalize the deployment process.",
           "examples": [
-            "\n            This might include sending notifications, cleaning up temporary\n            files, or running post-deployment tests.\n\n            ```yaml title=\"after_script example\"\n            after_script:\n              - echo \"Running after script\"\n              - echo \"Cleaning up temporary files\"\n              - rm -rf /tmp/*\n            ```\n            "
+            "\n            This might include sending notifications, cleaning up temporary\n            files, or running post-deployment tests.\n\n            ```yaml\n            after_script:\n              - echo \"Running after script\"\n              - echo \"Cleaning up temporary files\"\n              - rm -rf /tmp/*\n            ```\n            "
           ],
           "items": {
             "anyOf": [
@@ -103,7 +103,7 @@
       ],
       "description": "Contains the configuration settings for the CI/CD provider that is used to automate the deployment of your infrastructure.",
       "examples": [
-        "\n            Below is an example of a CI/CD configuration that uses GitHub Actions as the\n            provider. The configuration specifies that the CI/CD process should track\n            the 'main' branch, automatically commit rendered configuration files, and\n            run before and after scripts.\n\n            ```yaml title=\"ci_cd example\"\n            ci_cd:\n              type: github-actions\n              branch: main\n              commit_render: true\n              before_script:\n                - echo \"Running before script\"\n                - echo \"Installing dependencies\"\n                - pip install -r requirements.txt\n              after_script:\n                - echo \"Running after script\"\n                - echo \"Cleaning up temporary files\"\n                - rm -rf /tmp/*\n            ```\n            "
+        "Below is an example of a CI/CD configuration that uses GitHub Actions as the\nprovider. The configuration specifies that the CI/CD process should track\nthe 'main' branch, automatically commit rendered configuration files, and\nrun before and after scripts.\n\n```yaml\nci_cd:\n    type: github-actions\n    branch: main\n    commit_render: true\n    before_script:\n        - echo \"Running before script\"\n        - echo \"Installing dependencies\"\n        - pip install -r requirements.txt\n    after_script:\n        - echo \"Running after script\"\n        - echo \"Cleaning up temporary files\"\n        - rm -rf /tmp/*\n```"
       ]
     },
     "project_name": {

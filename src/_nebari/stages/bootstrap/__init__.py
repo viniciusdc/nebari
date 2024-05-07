@@ -1,5 +1,6 @@
 import enum
 import io
+import json
 import pathlib
 import typing
 from inspect import cleandoc
@@ -10,6 +11,7 @@ from _nebari.provider.cicd.github import gen_nebari_linter, gen_nebari_ops
 from _nebari.provider.cicd.gitlab import gen_gitlab_ci
 from nebari import schema
 from nebari.hookspecs import NebariStage, hookimpl
+import yaml
 
 
 def gen_gitignore():
@@ -113,7 +115,7 @@ class CICD(schema.Base):
             This might include installing dependencies, setting up
             environment variables, or running tests.
 
-            ```yaml title="before_script example"
+            ```yaml
             before_script:
               - echo "Running before script"
               - echo "Installing dependencies"
@@ -136,7 +138,7 @@ class CICD(schema.Base):
             This might include sending notifications, cleaning up temporary
             files, or running post-deployment tests.
 
-            ```yaml title="after_script example"
+            ```yaml
             after_script:
               - echo "Running after script"
               - echo "Cleaning up temporary files"
@@ -156,27 +158,51 @@ class InputSchema(schema.Base):
             """
         ),
         examples=[
-            """
-            Below is an example of a CI/CD configuration that uses GitHub Actions as the
-            provider. The configuration specifies that the CI/CD process should track
-            the 'main' branch, automatically commit rendered configuration files, and
-            run before and after scripts.
+            cleandoc(
+                f"""
+                Below is an example of a CI/CD configuration that uses GitHub Actions as the
+                provider. The configuration specifies that the CI/CD process should track
+                the 'main' branch, automatically commit rendered configuration files, and
+                run before and after scripts.
 
-            ```yaml title="ci_cd example"
-            ci_cd:
-              type: github-actions
-              branch: main
-              commit_render: true
-              before_script:
-                - echo "Running before script"
-                - echo "Installing dependencies"
-                - pip install -r requirements.txt
-              after_script:
-                - echo "Running after script"
-                - echo "Cleaning up temporary files"
-                - rm -rf /tmp/*
-            ```
-            """
+                ```yaml
+                ci_cd:
+                    type: github-actions
+                    branch: main
+                    commit_render: true
+                    before_script:
+                        - echo "Running before script"
+                        - echo "Installing dependencies"
+                        - pip install -r requirements.txt
+                    after_script:
+                        - echo "Running after script"
+                        - echo "Cleaning up temporary files"
+                        - rm -rf /tmp/*
+                ```
+                """
+            ),
+            # cleandoc(
+            #     f"""
+            #     Below is an example of a CI/CD configuration that uses GitLab CI as the
+            #     provider. The configuration specifies that the CI/CD process should track
+            #     the 'main' branch, automatically commit rendered configuration files, and
+            #     run before and after scripts.
+            #     ```yaml
+            #     ci_cd:
+            #         type: gitlab-ci
+            #         branch: main
+            #         commit_render: true
+            #         before_script:
+            #             - echo "Running before script"
+            #             - echo "Installing dependencies"
+            #             - pip install -r requirements.txt
+            #         after_script:
+            #             - echo "Running after script"
+            #             - echo "Cleaning up temporary files"
+            #             - rm -rf /tmp/*
+            #     ```
+            #     """
+            # ),
         ],
     )
 

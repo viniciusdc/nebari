@@ -111,17 +111,19 @@ class CICD(schema.Base):
             """
         ),
         examples=[
-            """
-            This might include installing dependencies, setting up
-            environment variables, or running tests.
+            cleandoc(
+                """
+                This might include installing dependencies, setting up
+                environment variables, or running tests.
 
-            ```yaml
-            before_script:
-              - echo "Running before script"
-              - echo "Installing dependencies"
-              - pip install -r requirements.txt
-            ```
-            """
+                ```yaml
+                before_script:
+                - echo "Running before script"
+                - echo "Installing dependencies"
+                - pip install -r requirements.txt
+                ```
+                """
+            )
         ],
     )
     after_script: typing.List[typing.Union[str, typing.Dict]] = Field(
@@ -134,17 +136,19 @@ class CICD(schema.Base):
             """
         ),
         examples=[
-            """
-            This might include sending notifications, cleaning up temporary
-            files, or running post-deployment tests.
+            cleandoc(
+                """
+                This might include sending notifications, cleaning up temporary
+                files, or running post-deployment tests.
 
-            ```yaml
-            after_script:
-              - echo "Running after script"
-              - echo "Cleaning up temporary files"
-              - rm -rf /tmp/*
-            ```
-            """
+                ```yaml
+                after_script:
+                - echo "Running after script"
+                - echo "Cleaning up temporary files"
+                - rm -rf /tmp/*
+                ```
+                """
+            )
         ],
     )
 
@@ -154,7 +158,8 @@ class InputSchema(schema.Base):
         default_factory=lambda: CICD(),
         description=cleandoc(
             """
-            Contains the configuration settings for the CI/CD provider that is used to automate the deployment of your infrastructure.
+            Contains the configuration settings for the CI/CD provider that is used to
+            automate the deployment of your infrastructure.
             """
         ),
         examples=[
@@ -180,29 +185,7 @@ class InputSchema(schema.Base):
                         - rm -rf /tmp/*
                 ```
                 """
-            ),
-            # cleandoc(
-            #     f"""
-            #     Below is an example of a CI/CD configuration that uses GitLab CI as the
-            #     provider. The configuration specifies that the CI/CD process should track
-            #     the 'main' branch, automatically commit rendered configuration files, and
-            #     run before and after scripts.
-            #     ```yaml
-            #     ci_cd:
-            #         type: gitlab-ci
-            #         branch: main
-            #         commit_render: true
-            #         before_script:
-            #             - echo "Running before script"
-            #             - echo "Installing dependencies"
-            #             - pip install -r requirements.txt
-            #         after_script:
-            #             - echo "Running after script"
-            #             - echo "Cleaning up temporary files"
-            #             - rm -rf /tmp/*
-            #     ```
-            #     """
-            # ),
+            )
         ],
     )
 

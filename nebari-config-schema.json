@@ -33,7 +33,7 @@
           "default": [],
           "description": "A list of scripts or commands that are executed prior to the main CI/CD pipeline actions.\nThis can include setup scripts, pre-deployment checks, or any preparatory\ntasks that need to be completed before the main deployment process begins.",
           "examples": [
-            "\n            This might include installing dependencies, setting up\n            environment variables, or running tests.\n\n            ```yaml\n            before_script:\n              - echo \"Running before script\"\n              - echo \"Installing dependencies\"\n              - pip install -r requirements.txt\n            ```\n            "
+            "This might include installing dependencies, setting up\nenvironment variables, or running tests.\n\n```yaml\nbefore_script:\n- echo \"Running before script\"\n- echo \"Installing dependencies\"\n- pip install -r requirements.txt\n```"
           ],
           "items": {
             "anyOf": [
@@ -52,7 +52,7 @@
           "default": [],
           "description": "A list of scripts or commands that are run after the main CI/CD pipeline actions have completed.\nThis might include cleanup operations, notification sending, or other\nfollow-up actions necessary to finalize the deployment process.",
           "examples": [
-            "\n            This might include sending notifications, cleaning up temporary\n            files, or running post-deployment tests.\n\n            ```yaml\n            after_script:\n              - echo \"Running after script\"\n              - echo \"Cleaning up temporary files\"\n              - rm -rf /tmp/*\n            ```\n            "
+            "This might include sending notifications, cleaning up temporary\nfiles, or running post-deployment tests.\n\n```yaml\nafter_script:\n- echo \"Running after script\"\n- echo \"Cleaning up temporary files\"\n- rm -rf /tmp/*\n```"
           ],
           "items": {
             "anyOf": [
@@ -101,7 +101,7 @@
           "$ref": "#/$defs/CICD"
         }
       ],
-      "description": "Contains the configuration settings for the CI/CD provider that is used to automate the deployment of your infrastructure.",
+      "description": "Contains the configuration settings for the CI/CD provider that is used to\nautomate the deployment of your infrastructure.",
       "examples": [
         "Below is an example of a CI/CD configuration that uses GitHub Actions as the\nprovider. The configuration specifies that the CI/CD process should track\nthe 'main' branch, automatically commit rendered configuration files, and\nrun before and after scripts.\n\n```yaml\nci_cd:\n    type: github-actions\n    branch: main\n    commit_render: true\n    before_script:\n        - echo \"Running before script\"\n        - echo \"Installing dependencies\"\n        - pip install -r requirements.txt\n    after_script:\n        - echo \"Running after script\"\n        - echo \"Cleaning up temporary files\"\n        - rm -rf /tmp/*\n```"
       ]
@@ -137,7 +137,7 @@
       ]
     },
     "nebari_version": {
-      "default": "2024.4.2.dev11+g0f18c614.d20240506",
+      "default": "2024.4.2.dev9+ge8c41430.d20240506",
       "description": "The current installed version of Nebari. This is used to determine if the\nschema's version, the user must run `nebari upgrade` to ensure\ncompatibility.",
       "title": "Nebari Version",
       "type": "string"

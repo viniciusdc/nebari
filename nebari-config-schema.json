@@ -10,23 +10,23 @@
             }
           ],
           "default": "none",
-          "description": "Specifies the CI/CD provider that is used to automate the deployment of your infrastructure.\nThis enumeration can include options such as GitHub Actions, GitLab CI, Jenkins, etc.\n\nValid options include:\n- 'github-actions'\n- 'gitlab-ci'\n- 'none'\n\nThe default is 'none', indicating that no automation is used unless\nspecified."
+          "description": "Specifies the CI/CD provider that is used to automate the deployment of your infrastructure.\nThis enumeration can include options such as GitHub Actions, GitLab CI, Jenkins, etc.\n\nValid options include: github-actions, gitlab-ci, none.\n\nThe default is 'none', indicating that no automation is used unless\nspecified."
         },
         "branch": {
           "default": "main",
-          "description": "Defines the version control branch that CI/CD operations should track and use for deployments.\nThe default branch is set to 'main'. This setting is crucial for aligning the CI/CD processes with the correct codebase state.",
+          "description": "Defines the version control branch that CI/CD operations should track and use for deployments.\nThe default branch is set to 'main'. This can be changed to any valid branch name.",
           "title": "Branch",
           "type": "string"
         },
         "commit_render": {
           "default": true,
-          "description": "Determines whether the CI/CD process should automatically commit rendered configuration files or outputs back into the repository.\nThis boolean flag defaults to True, enabling automatic commits to ensure that all changes are version-controlled.",
+          "description": "Determines whether the CI/CD process should automatically commit rendered\nconfiguration files or outputs back into the repository. This can be useful\nfor tracking changes and ensuring that the latest configuration is always\navailable in the repository.",
           "title": "Commit Render",
           "type": "boolean"
         },
         "before_script": {
           "default": [],
-          "description": "A list of scripts or commands that are executed prior to the main CI/CD pipeline actions.\nThis can include setup scripts, pre-deployment checks, or any preparatory tasks that need to be completed before the main deployment process begins.",
+          "description": "A list of scripts or commands that are executed prior to the main CI/CD pipeline actions.\nThis can include setup scripts, pre-deployment checks, or any preparatory\ntasks that need to be completed before the main deployment process begins.\n\nFor example, this might include installing dependencies, setting up\nenvironment variables, or running tests.\n\n```yaml\nbefore_script:\n  - echo \"Running before script\"\n  - echo \"Installing dependencies\"\n  - pip install -r requirements.txt\n```",
           "items": {
             "anyOf": [
               {
@@ -42,7 +42,7 @@
         },
         "after_script": {
           "default": [],
-          "description": "A list of scripts or commands that are run after the main CI/CD pipeline actions have completed.\nThis might include cleanup operations, notification sending, or other follow-up actions necessary to finalize the deployment process.",
+          "description": "A list of scripts or commands that are run after the main CI/CD pipeline actions have completed.\nThis might include cleanup operations, notification sending, or other\nfollow-up actions necessary to finalize the deployment process.\n\nFor example, this might include sending notifications, cleaning up temporary\nfiles, or running post-deployment tests.\n\n```yaml\nafter_script:\n  - echo \"Running after script\"\n  - echo \"Cleaning up temporary files\"\n  - rm -rf /tmp/*\n```",
           "items": {
             "anyOf": [
               {
@@ -118,7 +118,7 @@
         }
       ],
       "default": "local",
-      "description": "Determines the cloud provider used to deploy infrastructure related\nresources on Nebari.\n\nOptions include:\n- `local`,\n- `existing`,\n- `do`,\n- `aws`,\n- `gcp`,\n- `azure`\n\nFor more information on the different providers, see [Nebari Deployment\nPlatforms](/docs/get-started/deploy). Defaults to `local`."
+      "description": "Determines the cloud provider used to deploy infrastructure related\nresources on Nebari.\n\nAvailable options include: local, existing, do, aws, gcp, azure.\n\nFor more information on the different providers, see [Nebari Deployment\nPlatforms](/docs/get-started/deploy). Defaults to `local`."
     },
     "nebari_version": {
       "default": "2024.4.2.dev11+g0f18c614.d20240506",

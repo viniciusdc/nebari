@@ -75,17 +75,11 @@ class Main(Base):
     provider: ProviderEnum = Field(
         default=ProviderEnum.local,
         description=cleandoc(
-            """
+            f"""
             Determines the cloud provider used to deploy infrastructure related
             resources on Nebari.
 
-            Options include:
-            - `local`,
-            - `existing`,
-            - `do`,
-            - `aws`,
-            - `gcp`,
-            - `azure`
+            Available options include: {', '.join([p.value for p in ProviderEnum])}.
 
             For more information on the different providers, see [Nebari Deployment
             Platforms](/docs/get-started/deploy). Defaults to `local`.

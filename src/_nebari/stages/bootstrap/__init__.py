@@ -68,26 +68,15 @@ class CiEnum(str, enum.Enum):
         return representer.represent_str(node.value)
 
 
-# class CICD(schema.Base):
-#     type: CiEnum = CiEnum.none
-#     branch: str = "main"
-#     commit_render: bool = True
-#     before_script: typing.List[typing.Union[str, typing.Dict]] = []
-#     after_script: typing.List[typing.Union[str, typing.Dict]] = []
-
-
 class CICD(schema.Base):
     type: CiEnum = Field(
         default=CiEnum.none,
         description=cleandoc(
-            """
+            f"""
             Specifies the CI/CD provider that is used to automate the deployment of your infrastructure.
             This enumeration can include options such as GitHub Actions, GitLab CI, Jenkins, etc.
 
-            Valid options include:
-            - 'github-actions'
-            - 'gitlab-ci'
-            - 'none'
+            Valid options include: {', '.join([p.value for p in CiEnum])}.
 
             The default is 'none', indicating that no automation is used unless
             specified.
@@ -99,7 +88,7 @@ class CICD(schema.Base):
         description=cleandoc(
             """
             Defines the version control branch that CI/CD operations should track and use for deployments.
-            The default branch is set to 'main'. This setting is crucial for aligning the CI/CD processes with the correct codebase state.
+            The default branch is set to 'main'. This can be changed to any valid branch name.
             """
         ),
     )
@@ -107,8 +96,10 @@ class CICD(schema.Base):
         default=True,
         description=cleandoc(
             """
-            Determines whether the CI/CD process should automatically commit rendered configuration files or outputs back into the repository.
-            This boolean flag defaults to True, enabling automatic commits to ensure that all changes are version-controlled.
+            Determines whether the CI/CD process should automatically commit rendered
+            configuration files or outputs back into the repository. This can be useful
+            for tracking changes and ensuring that the latest configuration is always
+            available in the repository.
             """
         ),
     )
@@ -117,7 +108,18 @@ class CICD(schema.Base):
         description=cleandoc(
             """
             A list of scripts or commands that are executed prior to the main CI/CD pipeline actions.
-            This can include setup scripts, pre-deployment checks, or any preparatory tasks that need to be completed before the main deployment process begins.
+            This can include setup scripts, pre-deployment checks, or any preparatory
+            tasks that need to be completed before the main deployment process begins.
+
+            For example, this might include installing dependencies, setting up
+            environment variables, or running tests.
+
+            ```yaml
+            before_script:
+              - echo "Running before script"
+              - echo "Installing dependencies"
+              - pip install -r requirements.txt
+            ```
             """
         ),
     )
@@ -126,7 +128,18 @@ class CICD(schema.Base):
         description=cleandoc(
             """
             A list of scripts or commands that are run after the main CI/CD pipeline actions have completed.
-            This might include cleanup operations, notification sending, or other follow-up actions necessary to finalize the deployment process.
+            This might include cleanup operations, notification sending, or other
+            follow-up actions necessary to finalize the deployment process.
+
+            For example, this might include sending notifications, cleaning up temporary
+            files, or running post-deployment tests.
+
+            ```yaml
+            after_script:
+              - echo "Running after script"
+              - echo "Cleaning up temporary files"
+              - rm -rf /tmp/*
+            ```
             """
         ),
     )

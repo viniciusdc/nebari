@@ -75,18 +75,23 @@ class CICD(schema.Base):
         default=CiEnum.none,
         description=cleandoc(
             f"""
-            Specifies the CI/CD provider that is used to automate the deployment of your infrastructure.
-            This enumeration can include options such as GitHub Actions, GitLab CI, Jenkins, etc.
+            Specifies the CI/CD provider that is used to automate the deployment of your
+            infrastructure.
             """
         ),
         optionsAre=[provider.value for provider in CiEnum],
+        note=cleandoc(
+            """
+            If opted for `None`, no CI/CD configuration will be generated.
+            """
+        ),
     )
     branch: str = Field(
         default="main",
         description=cleandoc(
             """
-            Defines the version control branch that CI/CD operations should track and use for deployments.
-            The default branch is set to 'main'. This can be changed to any valid branch name.
+            Defines the version control branch that CI/CD operations should track and
+            use for deployments. This can be changed to any valid branch name.
             """
         ),
     )
@@ -105,9 +110,14 @@ class CICD(schema.Base):
         default=[],
         description=cleandoc(
             """
-            A list of scripts or commands that are executed prior to the main CI/CD pipeline actions.
+            A list of scripts or commands that are executed prior to the main CI/CD
+            pipeline actions.
+
             This can include setup scripts, pre-deployment checks, or any preparatory
             tasks that need to be completed before the main deployment process begins.
+
+            It expects a list of tasks to be rendered in the same syntax as a the
+            available CI/CD provider. Currently **only** supported on `gitlab-ci`.
             """
         ),
         examples=[
@@ -118,9 +128,8 @@ class CICD(schema.Base):
 
                 ```yaml
                 before_script:
-                - echo "Running before script"
-                - echo "Installing dependencies"
-                - pip install -r requirements.txt
+                    - name: Export Environment Variables
+                      run: "echo 'CREDENTIALS=${APPLICATION_CREDENTIALS}' >> $GITHUB_ENV"
                 ```
                 """
             )
@@ -130,9 +139,13 @@ class CICD(schema.Base):
         default=[],
         description=cleandoc(
             """
-            A list of scripts or commands that are run after the main CI/CD pipeline actions have completed.
-            This might include cleanup operations, notification sending, or other
-            follow-up actions necessary to finalize the deployment process.
+            A list of scripts or commands that are run after the main CI/CD pipeline
+            actions have completed. This might include cleanup operations, notification
+            sending, or other follow-up actions necessary to finalize the deployment
+            process.
+
+            It expects a list of tasks to be rendered in the same syntax as a the
+            available CI/CD provider. Currently **only** supported on `gitlab-ci`.
             """
         ),
         examples=[
@@ -143,9 +156,8 @@ class CICD(schema.Base):
 
                 ```yaml
                 after_script:
-                - echo "Running after script"
-                - echo "Cleaning up temporary files"
-                - rm -rf /tmp/*
+                    - name: Send Notification
+                      run: "echo 'Deployment Complete!'"
                 ```
                 """
             )
@@ -158,35 +170,43 @@ class InputSchema(schema.Base):
         default_factory=lambda: CICD(),
         description=cleandoc(
             """
-            Contains the configuration settings for the CI/CD provider that is used to
-            automate the deployment of your infrastructure.
+            Nebari uses
+            [infrastructure-as-code](https://en.wikipedia.org/wiki/Infrastructure_as_code)
+            to allow developers and users to request changes to the environment via pull
+            requests (PRs) which then get approved by administrators.
+
+            You may configure a CI/CD process to watch for pull-requests or commits on
+            specific branches. Currently, CI/CD can be setup for either [GitHub
+            Actions](https://docs.github.com/en/actions) or [GitLab
+            CI](https://docs.gitlab.com/ee/ci/).
             """
         ),
         examples=[
             cleandoc(
                 f"""
-                Below is an example of a CI/CD configuration that uses GitHub Actions as the
-                provider. The configuration specifies that the CI/CD process should track
-                the 'main' branch, automatically commit rendered configuration files, and
-                run before and after scripts.
+                Below is an example of a CI/CD configuration that uses GitHub Actions as
+                the provider. The configuration specifies that the CI/CD process should
+                track the `main` branch, automatically commit rendered configuration
+                files, and run before and after scripts.
 
                 ```yaml
                 ci_cd:
                     type: github-actions
                     branch: main
                     commit_render: true
-                    before_script:
-                        - echo "Running before script"
-                        - echo "Installing dependencies"
-                        - pip install -r requirements.txt
-                    after_script:
-                        - echo "Running after script"
-                        - echo "Cleaning up temporary files"
-                        - rm -rf /tmp/*
                 ```
                 """
             )
         ],
+        note=cleandoc(
+            """
+            If `ci_cd` is not supplied, no CI/CD will be auto-generated, however, we
+            advise employing an infrastructure-as-code approach. This allows teams to
+            more quickly modify their deployment, empowering developers and data
+            scientists to request the changes and have them approved by an
+            administrator.
+            """
+        ),
     )
 
 

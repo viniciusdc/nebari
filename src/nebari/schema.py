@@ -77,11 +77,30 @@ class Main(Base):
         description=cleandoc(
             f"""
             Determines the cloud provider used to deploy infrastructure related
-            resources on Nebari. For more information on the different providers, see
+            resources on Nebari.
+
+            Supported values include:
+            - `do` for DigitalOcean;
+            - `aws` for Amazon Web Services;
+            - `gcp` for Google Could Provider;
+            - `azure` for Microsoft Azure;
+            - `existing` for deploying on an existing Kubernetes infrastructure;
+            - `local` for local cluster deployment using Kind.
+
+            For more information on the different providers, see
             [Nebari Deployment Platforms](/docs/get-started/deploy).
         """
         ),
         optionsAre=[provider.value for provider in ProviderEnum],
+        note=cleandoc(
+            """
+            The `local` provider, used for local development and testing, is the default
+            setting when executing `nebari init` without a specified provider. Nebari
+            will automatically deploys a Kubernetes cluster locally using Kind as part of
+            its own deployment process, if you are attempting to use pre-existing
+            infrastructure, set the provider to `existing` instead.
+            """
+        ),
     )
     nebari_version: str = Field(
         default=__version__,

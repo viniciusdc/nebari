@@ -5,8 +5,9 @@ import os
 import pathlib
 import re
 from typing import Any, Dict, List, Optional, Tuple, Type
+from inspect import cleandoc
 
-from pydantic import field_validator
+from pydantic import field_validator, Field, model_validator
 
 from _nebari.provider import terraform
 from _nebari.provider.cloud import azure_cloud
@@ -82,13 +83,138 @@ class TerraformStateEnum(str, enum.Enum):
 
 
 class TerraformState(schema.Base):
-    type: TerraformStateEnum = TerraformStateEnum.remote
-    backend: Optional[str] = None
-    config: Dict[str, str] = {}
+    type: TerraformStateEnum = Field(
+        default=TerraformStateEnum.remote,
+        description=cleandoc(
+            """
+            Selects the Terraform state management type:
+
+            - `remote`: Sets up a remote state backend using pre-configured settings
+              appropriate for the chosen cloud provider. Compatible with all
+              S3-compatible storage options available through Nebari's supported
+              providers.
+            - `local`: Stores the state data locally within the `state` directory at the
+              project's root.
+            - `existing`: Enable further options to non-standard Nebari state backends,
+              such as `consul` or `kubernetes`.
+
+            Nebari supports these options to cater to various development needs and
+            preferences. It is important to choose carefully as these options are
+            mutually exclusive. Switching state types after project initialization is
+            discouraged due to the risk of state corruption.
+            """
+        ),
+        optionsAre=[state.value for state in TerraformStateEnum],
+        note=cleandoc(
+            """
+            If you opt for the `local` state type, it's crucial to keep the `state`
+            files intact and unaltered to avoid inconsistencies during deployment.
+            Its recommended to use the `remote` state type for production deployments as
+            it grants safe-guards like state locking to prevent conflicts during
+            concurrent operations.
+            """
+        ),
+    )
+    backend: Optional[str] = Field(
+        default=None,
+        description=cleandoc(
+            """
+            Specifies the Terraform backend to manage state data, applicable **only**
+            when using the `existing` state type.
+
+            A backend determines the storage location for Terraform's state files, which
+            track managed resources. Nebari handles this automatically for the `remote`
+            state type, but for `existing` state types, you must provide the backend
+            configuration manually.
+            """
+        ),
+    )
+    config: Dict[str, str] = Field(
+        default_factory=dict,
+        description=cleandoc(
+            """
+            Configuration for the Terraform backend, only supported if using
+            with the existing terraform state type. For a complete list of
+            supported backends and their configuration options, see the [Terraform
+            Backednds](https://developer.hashicorp.com/terraform/language/settings/backends/configuration#available-backends)
+            documentation.
+            """
+        ),
+        examples=[
+            cleandoc(
+                """
+                Bellow is an example of the configuration for the Terraform backend
+                when using an existing state backend from a supported provider. In this
+                example, we've configured the backend to use the [Kubernetes secret
+                backend](https://developer.hashicorp.com/terraform/language/settings/backends/kubernetes)
+                with the following configuration options:
+
+                ```yaml
+                config:
+                    secret_suffix: my-secret-suffix
+                    labels:
+                        my-label: my-value
+                    namespace: my-namespace
+                    in_cluster_config: true
+                ```
+                """
+            ),
+        ],
+    )
+
+    @model_validator(mode="after")
+    def validate_fields(self) -> "TerraformState":
+        # 'remote' and 'local' types should not have backend or config fields
+        if self.type in [TerraformStateEnum.remote, TerraformStateEnum.local]:
+            if any([self.backend is not None, self.config]):
+                field = "backend" if self.backend is not None else "config"
+                raise ValueError(
+                    f"The `{field}` field is not supported for the `{self.type.name}` state type."
+                )
+
+        elif self.type == TerraformStateEnum.existing:
+            if any([self.backend is None, not self.config]):
+                field = "backend" if self.backend is None else "config"
+                raise ValueError(
+                    f"The `{field}` field is required for the `existing` state type."
+                )
+
+        return self
 
 
 class InputSchema(schema.Base):
-    terraform_state: TerraformState = TerraformState()
+    terraform_state: TerraformState = Field(
+        default_factory=lambda: TerraformState(),
+        description=cleandoc(
+            """
+            [Terraform state](https://developer.hashicorp.com/terraform/language/state)
+            configuration, required by terraform to securely store the state of the
+            terraform deployment, to be provisioned and stored remotely, locally on the
+            filesystem, or using existing terraform state backend.
+
+            Which ranges from using:
+            - `GCS` for Google Cloud Platform
+            - `S3` for Amazon Web Services
+            - `Spaces` (S3 compatible) for DigitalOcean
+            - `azurerm` for Microsoft Azure
+            """
+        ),
+        examples=[
+            cleandoc(
+                """
+                Bellow we provide a basic example of the Terraform state configuration
+                for a default deployment. When opting by remote, `nebari` will
+                automatically provision a remote state backend using the pre-build
+                settings for the selected cloud provider.
+
+                ```yaml
+                terraform_state:
+                  type: remote
+                ```
+                """
+            )
+        ],
+    )
 
 
 class OutputSchema(schema.Base):

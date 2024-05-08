@@ -556,12 +556,20 @@ provider_enum_default_node_groups_map: Dict[schema.ProviderEnum, Any] = {
 
 
 class InputSchema(schema.Base):
-    local: Optional[LocalProvider] = None
-    existing: Optional[ExistingProvider] = None
-    google_cloud_platform: Optional[GoogleCloudPlatformProvider] = None
-    amazon_web_services: Optional[AmazonWebServicesProvider] = None
-    azure: Optional[AzureProvider] = None
-    digital_ocean: Optional[DigitalOceanProvider] = None
+    local: Optional[LocalProvider] = Field(default=None, description="Local provider")
+    existing: Optional[ExistingProvider] = Field(
+        default=None, description="Existing provider"
+    )
+    google_cloud_platform: Optional[GoogleCloudPlatformProvider] = Field(
+        default=None, description="Google Cloud Platform provider"
+    )
+    amazon_web_services: Optional[AmazonWebServicesProvider] = Field(
+        default=None, description="Amazon Web Services provider"
+    )
+    azure: Optional[AzureProvider] = Field(default=None, description="Azure provider")
+    digital_ocean: Optional[DigitalOceanProvider] = Field(
+        default=None, description="Digital Ocean provider"
+    )
 
     @model_validator(mode="before")
     @classmethod

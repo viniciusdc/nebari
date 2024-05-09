@@ -2,7 +2,13 @@ import enum
 from typing import Annotated
 
 import pydantic
-from pydantic import ConfigDict, Field, StringConstraints, field_validator
+from pydantic import (
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 from ruamel.yaml import yaml_object
 
 from _nebari.utils import escape_string, yaml
@@ -30,6 +36,52 @@ class Base(pydantic.BaseModel):
     model_config = ConfigDict(
         extra="forbid", validate_assignment=True, populate_by_name=True
     )
+
+    @model_validator(mode="after")
+    def check_dependencies(self) -> "Base":
+        """
+        Validates that all fields with dependencies are correctly initialized
+        based on their 'depends_on' conditions. This validator ensures that:
+
+        1. If a field depends on another field being set, that dependency must be met.
+        2. If a field depends on another field being set to a specific value, this condition must also be met.
+
+        This is done to ensure data integrity and enforce specific logical constraints within the model.
+
+        Raises:
+            ValueError: If the dependency condition is not met, either because the field is not set
+            or because it does not meet the expected value.
+        """
+        fields = self.model_fields
+
+        for field_name, field_info in fields.items():
+            # Skip fields without 'json_schema_extra' or 'depends_on' key
+            extras = getattr(field_info, "json_schema_extra", {})
+            if not extras:
+                continue
+
+            dependency_name = extras.get("depends_on")
+
+            if not dependency_name:
+                continue
+
+            if isinstance(dependency_name, dict):
+                for dep_field, dep_value in dependency_name.items():
+                    if (
+                        not hasattr(self, dep_field)
+                        or getattr(self, dep_field) != dep_value
+                    ):
+                        raise ValueError(
+                            f"The field '{field_name}' depends on the field '{dep_field}' having the value '{dep_value}'."
+                        )
+            else:
+                if fields[dependency_name].default is None and not hasattr(
+                    self, dependency_name
+                ):
+                    raise ValueError(
+                        f"The '{field_name}' depends on '{dependency_name}' being initialized and properly set."
+                    )
+        return self
 
 
 @yaml_object(yaml)

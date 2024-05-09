@@ -108,6 +108,7 @@ class CICD(schema.Base):
     )
     before_script: typing.List[typing.Union[str, typing.Dict]] = Field(
         default=[],
+        depends_on={"type": CiEnum.gitlab_ci},
         description=cleandoc(
             """
             A list of scripts or commands that are executed prior to the main CI/CD
@@ -137,6 +138,7 @@ class CICD(schema.Base):
     )
     after_script: typing.List[typing.Union[str, typing.Dict]] = Field(
         default=[],
+        depends_on={"type": CiEnum.gitlab_ci},
         description=cleandoc(
             """
             A list of scripts or commands that are run after the main CI/CD pipeline

@@ -508,7 +508,7 @@ class AmazonWebServicesProvider(schema.Base):
 
 
 class LocalProvider(schema.Base):
-    kube_context: Optional[str] = None
+    kube_context: Optional[str] = Field(default=None, description="Kube context")
     node_selectors: Dict[str, KeyValueDict] = {
         "general": KeyValueDict(key="kubernetes.io/os", value="linux"),
         "user": KeyValueDict(key="kubernetes.io/os", value="linux"),
@@ -556,19 +556,23 @@ provider_enum_default_node_groups_map: Dict[schema.ProviderEnum, Any] = {
 
 
 class InputSchema(schema.Base):
-    local: Optional[LocalProvider] = Field(default=None, description="Local provider")
+    local: Optional[LocalProvider] = Field(
+        default=None, description="Local provider", group_by="provider"
+    )
     existing: Optional[ExistingProvider] = Field(
-        default=None, description="Existing provider"
+        default=None, description="Existing provider", group_by="provider"
     )
     google_cloud_platform: Optional[GoogleCloudPlatformProvider] = Field(
-        default=None, description="Google Cloud Platform provider"
+        default=None, description="Google Cloud Platform provider", group_by="provider"
     )
     amazon_web_services: Optional[AmazonWebServicesProvider] = Field(
-        default=None, description="Amazon Web Services provider"
+        default=None, description="Amazon Web Services provider", group_by="provider"
     )
-    azure: Optional[AzureProvider] = Field(default=None, description="Azure provider")
+    azure: Optional[AzureProvider] = Field(
+        default=None, description="Azure provider", group_by="provider"
+    )
     digital_ocean: Optional[DigitalOceanProvider] = Field(
-        default=None, description="Digital Ocean provider"
+        default=None, description="Digital Ocean provider", group_by="provider"
     )
 
     @model_validator(mode="before")

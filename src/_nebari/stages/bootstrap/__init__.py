@@ -118,7 +118,8 @@ class CICD(schema.Base):
             tasks that need to be completed before the main deployment process begins.
 
             It expects a list of tasks to be rendered in the same syntax as a the
-            available CI/CD provider. Currently **only** supported on `gitlab-ci`.
+            available CI/CD provider. Currently **only** supported on `gitlab-ci`
+            workflows.
             """
         ),
         examples=[
@@ -147,7 +148,8 @@ class CICD(schema.Base):
             process.
 
             It expects a list of tasks to be rendered in the same syntax as a the
-            available CI/CD provider. Currently **only** supported on `gitlab-ci`.
+            available CI/CD provider. Currently **only** supported on `gitlab-ci`
+            workflows.
             """
         ),
         examples=[

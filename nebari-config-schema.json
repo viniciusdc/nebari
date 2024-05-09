@@ -46,6 +46,15 @@
       "title": "AWSNodeGroup",
       "type": "object"
     },
+    "AccessEnum": {
+      "enum": [
+        "all",
+        "yaml",
+        "keycloak"
+      ],
+      "title": "AccessEnum",
+      "type": "string"
+    },
     "AmazonWebServicesProvider": {
       "additionalProperties": false,
       "properties": {
@@ -171,6 +180,80 @@
       ],
       "title": "AmazonWebServicesProvider",
       "type": "object"
+    },
+    "ArgoWorkflows": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "overrides": {
+          "default": {},
+          "title": "Overrides",
+          "type": "object"
+        },
+        "nebari_workflow_controller": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/NebariWorkflowController"
+            }
+          ],
+          "default": {
+            "enabled": true,
+            "image_tag": "2024.4.1"
+          }
+        }
+      },
+      "title": "ArgoWorkflows",
+      "type": "object"
+    },
+    "Auth0Authentication": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/AuthenticationEnum"
+            }
+          ],
+          "default": "Auth0"
+        },
+        "config": {
+          "$ref": "#/$defs/Auth0Config"
+        }
+      },
+      "title": "Auth0Authentication",
+      "type": "object"
+    },
+    "Auth0Config": {
+      "additionalProperties": false,
+      "properties": {
+        "client_id": {
+          "title": "Client Id",
+          "type": "string"
+        },
+        "client_secret": {
+          "title": "Client Secret",
+          "type": "string"
+        },
+        "auth0_subdomain": {
+          "title": "Auth0 Subdomain",
+          "type": "string"
+        }
+      },
+      "title": "Auth0Config",
+      "type": "object"
+    },
+    "AuthenticationEnum": {
+      "enum": [
+        "password",
+        "GitHub",
+        "Auth0"
+      ],
+      "title": "AuthenticationEnum",
+      "type": "string"
     },
     "AzureNodeGroup": {
       "additionalProperties": false,
@@ -357,7 +440,7 @@
           "depends_on": {
             "type": "gitlab-ci"
           },
-          "description": "A list of scripts or commands that are executed prior to the main CI/CD\npipeline actions.\n\nThis can include setup scripts, pre-deployment checks, or any preparatory\ntasks that need to be completed before the main deployment process begins.\n\nIt expects a list of tasks to be rendered in the same syntax as a the\navailable CI/CD provider. Currently **only** supported on `gitlab-ci`.",
+          "description": "A list of scripts or commands that are executed prior to the main CI/CD\npipeline actions.\n\nThis can include setup scripts, pre-deployment checks, or any preparatory\ntasks that need to be completed before the main deployment process begins.\n\nIt expects a list of tasks to be rendered in the same syntax as a the\navailable CI/CD provider. Currently **only** supported on `gitlab-ci`\nworkflows.",
           "examples": [
             "This might include installing dependencies, setting up\nenvironment variables, or running tests.\n\n```yaml\nbefore_script:\n    - name: Export Environment Variables\n      run: \"echo 'CREDENTIALS=${APPLICATION_CREDENTIALS}' >> $GITHUB_ENV\"\n```"
           ],
@@ -379,7 +462,7 @@
           "depends_on": {
             "type": "gitlab-ci"
           },
-          "description": "A list of scripts or commands that are run after the main CI/CD pipeline\nactions have completed. This might include cleanup operations, notification\nsending, or other follow-up actions necessary to finalize the deployment\nprocess.\n\nIt expects a list of tasks to be rendered in the same syntax as a the\navailable CI/CD provider. Currently **only** supported on `gitlab-ci`.",
+          "description": "A list of scripts or commands that are run after the main CI/CD pipeline\nactions have completed. This might include cleanup operations, notification\nsending, or other follow-up actions necessary to finalize the deployment\nprocess.\n\nIt expects a list of tasks to be rendered in the same syntax as a the\navailable CI/CD provider. Currently **only** supported on `gitlab-ci`\nworkflows.",
           "examples": [
             "This might include sending notifications, cleaning up temporary\nfiles, or running post-deployment tests.\n\n```yaml\nafter_script:\n    - name: Send Notification\n      run: \"echo 'Deployment Complete!'\"\n```"
           ],
@@ -400,6 +483,60 @@
       "title": "CICD",
       "type": "object"
     },
+    "Certificate": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/CertificateEnum"
+            }
+          ],
+          "default": "self-signed"
+        },
+        "secret_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Secret Name"
+        },
+        "acme_email": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Acme Email"
+        },
+        "acme_server": {
+          "default": "https://acme-v02.api.letsencrypt.org/directory",
+          "title": "Acme Server",
+          "type": "string"
+        }
+      },
+      "title": "Certificate",
+      "type": "object"
+    },
+    "CertificateEnum": {
+      "enum": [
+        "lets-encrypt",
+        "self-signed",
+        "existing",
+        "disabled"
+      ],
+      "title": "CertificateEnum",
+      "type": "string"
+    },
     "CiEnum": {
       "enum": [
         "github-actions",
@@ -408,6 +545,149 @@
       ],
       "title": "CiEnum",
       "type": "string"
+    },
+    "CondaEnvironment": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "channels": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Channels"
+        },
+        "dependencies": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "object"
+              }
+            ]
+          },
+          "title": "Dependencies",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "dependencies"
+      ],
+      "title": "CondaEnvironment",
+      "type": "object"
+    },
+    "CondaStore": {
+      "additionalProperties": false,
+      "properties": {
+        "extra_settings": {
+          "default": {},
+          "title": "Extra Settings",
+          "type": "object"
+        },
+        "extra_config": {
+          "default": "",
+          "title": "Extra Config",
+          "type": "string"
+        },
+        "image": {
+          "default": "quansight/conda-store-server",
+          "title": "Image",
+          "type": "string"
+        },
+        "image_tag": {
+          "default": "2024.3.1",
+          "title": "Image Tag",
+          "type": "string"
+        },
+        "default_namespace": {
+          "default": "nebari-git",
+          "title": "Default Namespace",
+          "type": "string"
+        },
+        "object_storage": {
+          "default": "200Gi",
+          "title": "Object Storage",
+          "type": "string"
+        }
+      },
+      "title": "CondaStore",
+      "type": "object"
+    },
+    "DaskWorkerProfile": {
+      "additionalProperties": true,
+      "properties": {
+        "worker_cores_limit": {
+          "title": "Worker Cores Limit",
+          "type": "number"
+        },
+        "worker_cores": {
+          "title": "Worker Cores",
+          "type": "number"
+        },
+        "worker_memory_limit": {
+          "title": "Worker Memory Limit",
+          "type": "string"
+        },
+        "worker_memory": {
+          "title": "Worker Memory",
+          "type": "string"
+        },
+        "worker_threads": {
+          "default": 1,
+          "title": "Worker Threads",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "worker_cores_limit",
+        "worker_cores",
+        "worker_memory_limit",
+        "worker_memory"
+      ],
+      "title": "DaskWorkerProfile",
+      "type": "object"
+    },
+    "DefaultImages": {
+      "additionalProperties": false,
+      "properties": {
+        "jupyterhub": {
+          "default": "quay.io/nebari/nebari-jupyterhub:2024.4.1",
+          "title": "Jupyterhub",
+          "type": "string"
+        },
+        "jupyterlab": {
+          "default": "quay.io/nebari/nebari-jupyterlab:2024.4.1",
+          "title": "Jupyterlab",
+          "type": "string"
+        },
+        "dask_worker": {
+          "default": "quay.io/nebari/nebari-dask-worker:2024.4.1",
+          "title": "Dask Worker",
+          "type": "string"
+        }
+      },
+      "title": "DefaultImages",
+      "type": "object"
     },
     "DigitalOceanNodeGroup": {
       "additionalProperties": false,
@@ -501,6 +781,37 @@
       "title": "DigitalOceanProvider",
       "type": "object"
     },
+    "DnsProvider": {
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Provider"
+        },
+        "auto_provision": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "title": "Auto Provision"
+        }
+      },
+      "title": "DnsProvider",
+      "type": "object"
+    },
     "ExistingProvider": {
       "additionalProperties": false,
       "properties": {
@@ -539,6 +850,66 @@
         }
       },
       "title": "ExistingProvider",
+      "type": "object"
+    },
+    "ExtContainerReg": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "access_key_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Access Key Id"
+        },
+        "secret_access_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Secret Access Key"
+        },
+        "extcr_account": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Extcr Account"
+        },
+        "extcr_region": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Extcr Region"
+        }
+      },
+      "title": "ExtContainerReg",
       "type": "object"
     },
     "GCPCIDRBlock": {
@@ -679,6 +1050,39 @@
         "master_ipv4_cidr_block"
       ],
       "title": "GCPPrivateClusterConfig",
+      "type": "object"
+    },
+    "GitHubAuthentication": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/AuthenticationEnum"
+            }
+          ],
+          "default": "GitHub"
+        },
+        "config": {
+          "$ref": "#/$defs/GitHubConfig"
+        }
+      },
+      "title": "GitHubAuthentication",
+      "type": "object"
+    },
+    "GitHubConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "client_id": {
+          "title": "Client Id",
+          "type": "string"
+        },
+        "client_secret": {
+          "title": "Client Secret",
+          "type": "string"
+        }
+      },
+      "title": "GitHubConfig",
       "type": "object"
     },
     "GoogleCloudPlatformProvider": {
@@ -828,6 +1232,368 @@
       "title": "GoogleCloudPlatformProvider",
       "type": "object"
     },
+    "HelmExtension": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "repository": {
+          "title": "Repository",
+          "type": "string"
+        },
+        "chart": {
+          "title": "Chart",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        },
+        "overrides": {
+          "default": {},
+          "title": "Overrides",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name",
+        "repository",
+        "chart",
+        "version"
+      ],
+      "title": "HelmExtension",
+      "type": "object"
+    },
+    "IdleCuller": {
+      "additionalProperties": false,
+      "properties": {
+        "terminal_cull_inactive_timeout": {
+          "default": 15,
+          "title": "Terminal Cull Inactive Timeout",
+          "type": "integer"
+        },
+        "terminal_cull_interval": {
+          "default": 5,
+          "title": "Terminal Cull Interval",
+          "type": "integer"
+        },
+        "kernel_cull_idle_timeout": {
+          "default": 15,
+          "title": "Kernel Cull Idle Timeout",
+          "type": "integer"
+        },
+        "kernel_cull_interval": {
+          "default": 5,
+          "title": "Kernel Cull Interval",
+          "type": "integer"
+        },
+        "kernel_cull_connected": {
+          "default": true,
+          "title": "Kernel Cull Connected",
+          "type": "boolean"
+        },
+        "kernel_cull_busy": {
+          "default": false,
+          "title": "Kernel Cull Busy",
+          "type": "boolean"
+        },
+        "server_shutdown_no_activity_timeout": {
+          "default": 15,
+          "title": "Server Shutdown No Activity Timeout",
+          "type": "integer"
+        }
+      },
+      "title": "IdleCuller",
+      "type": "object"
+    },
+    "Ingress": {
+      "additionalProperties": false,
+      "properties": {
+        "terraform_overrides": {
+          "default": {},
+          "title": "Terraform Overrides",
+          "type": "object"
+        }
+      },
+      "title": "Ingress",
+      "type": "object"
+    },
+    "JHubApps": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "Enabled",
+          "type": "boolean"
+        }
+      },
+      "title": "JHubApps",
+      "type": "object"
+    },
+    "JupyterHub": {
+      "additionalProperties": false,
+      "properties": {
+        "overrides": {
+          "default": {},
+          "title": "Overrides",
+          "type": "object"
+        }
+      },
+      "title": "JupyterHub",
+      "type": "object"
+    },
+    "JupyterHubTheme": {
+      "additionalProperties": false,
+      "properties": {
+        "hub_title": {
+          "default": "Nebari",
+          "title": "Hub Title",
+          "type": "string"
+        },
+        "hub_subtitle": {
+          "default": "Your open source data science platform",
+          "title": "Hub Subtitle",
+          "type": "string"
+        },
+        "welcome": {
+          "default": "Welcome! Learn about Nebari's features and configurations in <a href=\"https://www.nebari.dev/docs\">the documentation</a>. If you have any questions or feedback, reach the team on <a href=\"https://www.nebari.dev/docs/community#getting-support\">Nebari's support forums</a>.",
+          "title": "Welcome",
+          "type": "string"
+        },
+        "logo": {
+          "default": "https://raw.githubusercontent.com/nebari-dev/nebari-design/main/logo-mark/horizontal/Nebari-Logo-Horizontal-Lockup-White-text.svg",
+          "title": "Logo",
+          "type": "string"
+        },
+        "favicon": {
+          "default": "https://raw.githubusercontent.com/nebari-dev/nebari-design/main/symbol/favicon.ico",
+          "title": "Favicon",
+          "type": "string"
+        },
+        "primary_color": {
+          "default": "#4f4173",
+          "title": "Primary Color",
+          "type": "string"
+        },
+        "primary_color_dark": {
+          "default": "#4f4173",
+          "title": "Primary Color Dark",
+          "type": "string"
+        },
+        "secondary_color": {
+          "default": "#957da6",
+          "title": "Secondary Color",
+          "type": "string"
+        },
+        "secondary_color_dark": {
+          "default": "#957da6",
+          "title": "Secondary Color Dark",
+          "type": "string"
+        },
+        "accent_color": {
+          "default": "#32C574",
+          "title": "Accent Color",
+          "type": "string"
+        },
+        "accent_color_dark": {
+          "default": "#32C574",
+          "title": "Accent Color Dark",
+          "type": "string"
+        },
+        "text_color": {
+          "default": "#111111",
+          "title": "Text Color",
+          "type": "string"
+        },
+        "h1_color": {
+          "default": "#652e8e",
+          "title": "H1 Color",
+          "type": "string"
+        },
+        "h2_color": {
+          "default": "#652e8e",
+          "title": "H2 Color",
+          "type": "string"
+        },
+        "version": {
+          "default": "v2024.4.2.dev18+g04d028c9.d20240508",
+          "title": "Version",
+          "type": "string"
+        },
+        "navbar_color": {
+          "default": "#1c1d26",
+          "title": "Navbar Color",
+          "type": "string"
+        },
+        "navbar_text_color": {
+          "default": "#f1f1f6",
+          "title": "Navbar Text Color",
+          "type": "string"
+        },
+        "navbar_hover_color": {
+          "default": "#db96f3",
+          "title": "Navbar Hover Color",
+          "type": "string"
+        },
+        "display_version": {
+          "default": "True",
+          "title": "Display Version",
+          "type": "string"
+        }
+      },
+      "title": "JupyterHubTheme",
+      "type": "object"
+    },
+    "JupyterLab": {
+      "additionalProperties": false,
+      "properties": {
+        "default_settings": {
+          "default": {},
+          "title": "Default Settings",
+          "type": "object"
+        },
+        "idle_culler": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/IdleCuller"
+            }
+          ],
+          "default": {
+            "kernel_cull_busy": false,
+            "kernel_cull_connected": true,
+            "kernel_cull_idle_timeout": 15,
+            "kernel_cull_interval": 5,
+            "server_shutdown_no_activity_timeout": 15,
+            "terminal_cull_inactive_timeout": 15,
+            "terminal_cull_interval": 5
+          }
+        },
+        "initial_repositories": {
+          "default": [],
+          "items": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "title": "Initial Repositories",
+          "type": "array"
+        },
+        "preferred_dir": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Preferred Dir"
+        }
+      },
+      "title": "JupyterLab",
+      "type": "object"
+    },
+    "JupyterLabPioneer": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "log_format": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Log Format"
+        }
+      },
+      "title": "JupyterLabPioneer",
+      "type": "object"
+    },
+    "JupyterLabProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "access": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/AccessEnum"
+            }
+          ],
+          "default": "all"
+        },
+        "display_name": {
+          "title": "Display Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "default": {
+          "default": false,
+          "title": "Default",
+          "type": "boolean"
+        },
+        "users": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Users"
+        },
+        "groups": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Groups"
+        },
+        "kubespawner_override": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/KubeSpawner"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "display_name",
+        "description"
+      ],
+      "title": "JupyterLabProfile",
+      "type": "object"
+    },
     "KeyValueDict": {
       "additionalProperties": false,
       "properties": {
@@ -845,6 +1611,56 @@
         "value"
       ],
       "title": "KeyValueDict",
+      "type": "object"
+    },
+    "Keycloak": {
+      "additionalProperties": false,
+      "properties": {
+        "initial_root_password": {
+          "title": "Initial Root Password",
+          "type": "string"
+        },
+        "overrides": {
+          "default": {},
+          "title": "Overrides",
+          "type": "object"
+        },
+        "realm_display_name": {
+          "default": "Nebari",
+          "title": "Realm Display Name",
+          "type": "string"
+        }
+      },
+      "title": "Keycloak",
+      "type": "object"
+    },
+    "KubeSpawner": {
+      "additionalProperties": true,
+      "properties": {
+        "cpu_limit": {
+          "title": "Cpu Limit",
+          "type": "number"
+        },
+        "cpu_guarantee": {
+          "title": "Cpu Guarantee",
+          "type": "number"
+        },
+        "mem_limit": {
+          "title": "Mem Limit",
+          "type": "string"
+        },
+        "mem_guarantee": {
+          "title": "Mem Guarantee",
+          "type": "string"
+        }
+      },
+      "required": [
+        "cpu_limit",
+        "cpu_guarantee",
+        "mem_limit",
+        "mem_guarantee"
+      ],
+      "title": "KubeSpawner",
       "type": "object"
     },
     "LocalProvider": {
@@ -888,6 +1704,251 @@
       "title": "LocalProvider",
       "type": "object"
     },
+    "Monitoring": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "overrides": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/MonitoringOverrides"
+            }
+          ],
+          "default": {
+            "loki": {},
+            "minio": {},
+            "promtail": {}
+          }
+        },
+        "minio_enabled": {
+          "default": true,
+          "title": "Minio Enabled",
+          "type": "boolean"
+        }
+      },
+      "title": "Monitoring",
+      "type": "object"
+    },
+    "MonitoringOverrides": {
+      "additionalProperties": false,
+      "properties": {
+        "loki": {
+          "default": {},
+          "title": "Loki",
+          "type": "object"
+        },
+        "promtail": {
+          "default": {},
+          "title": "Promtail",
+          "type": "object"
+        },
+        "minio": {
+          "default": {},
+          "title": "Minio",
+          "type": "object"
+        }
+      },
+      "title": "MonitoringOverrides",
+      "type": "object"
+    },
+    "NebariExtension": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "image": {
+          "title": "Image",
+          "type": "string"
+        },
+        "urlslug": {
+          "title": "Urlslug",
+          "type": "string"
+        },
+        "private": {
+          "default": false,
+          "title": "Private",
+          "type": "boolean"
+        },
+        "oauth2client": {
+          "default": false,
+          "title": "Oauth2Client",
+          "type": "boolean"
+        },
+        "keycloakadmin": {
+          "default": false,
+          "title": "Keycloakadmin",
+          "type": "boolean"
+        },
+        "jwt": {
+          "default": false,
+          "title": "Jwt",
+          "type": "boolean"
+        },
+        "nebariconfigyaml": {
+          "default": false,
+          "title": "Nebariconfigyaml",
+          "type": "boolean"
+        },
+        "logout": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Logout"
+        },
+        "envs": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/NebariExtensionEnv"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Envs"
+        }
+      },
+      "required": [
+        "name",
+        "image",
+        "urlslug"
+      ],
+      "title": "NebariExtension",
+      "type": "object"
+    },
+    "NebariExtensionEnv": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "NebariExtensionEnv",
+      "type": "object"
+    },
+    "NebariWorkflowController": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "image_tag": {
+          "default": "2024.4.1",
+          "title": "Image Tag",
+          "type": "string"
+        }
+      },
+      "title": "NebariWorkflowController",
+      "type": "object"
+    },
+    "PasswordAuthentication": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/AuthenticationEnum"
+            }
+          ],
+          "default": "password"
+        }
+      },
+      "title": "PasswordAuthentication",
+      "type": "object"
+    },
+    "Profiles": {
+      "additionalProperties": false,
+      "properties": {
+        "jupyterlab": {
+          "default": [
+            {
+              "access": "all",
+              "default": true,
+              "description": "Stable environment with 2 cpu / 8 GB ram",
+              "display_name": "Small Instance",
+              "groups": null,
+              "kubespawner_override": {
+                "cpu_guarantee": 1.5,
+                "cpu_limit": 2.0,
+                "mem_guarantee": "5G",
+                "mem_limit": "8G"
+              },
+              "users": null
+            },
+            {
+              "access": "all",
+              "default": false,
+              "description": "Stable environment with 4 cpu / 16 GB ram",
+              "display_name": "Medium Instance",
+              "groups": null,
+              "kubespawner_override": {
+                "cpu_guarantee": 3.0,
+                "cpu_limit": 4.0,
+                "mem_guarantee": "10G",
+                "mem_limit": "16G"
+              },
+              "users": null
+            }
+          ],
+          "items": {
+            "$ref": "#/$defs/JupyterLabProfile"
+          },
+          "title": "Jupyterlab",
+          "type": "array"
+        },
+        "dask_worker": {
+          "additionalProperties": {
+            "$ref": "#/$defs/DaskWorkerProfile"
+          },
+          "default": {
+            "Medium Worker": {
+              "worker_cores": 3.0,
+              "worker_cores_limit": 4.0,
+              "worker_memory": "10G",
+              "worker_memory_limit": "16G",
+              "worker_threads": 4
+            },
+            "Small Worker": {
+              "worker_cores": 1.5,
+              "worker_cores_limit": 2.0,
+              "worker_memory": "5G",
+              "worker_memory_limit": "8G",
+              "worker_threads": 2
+            }
+          },
+          "title": "Dask Worker",
+          "type": "object"
+        }
+      },
+      "title": "Profiles",
+      "type": "object"
+    },
     "ProviderEnum": {
       "enum": [
         "local",
@@ -899,6 +1960,82 @@
       ],
       "title": "ProviderEnum",
       "type": "string"
+    },
+    "Security": {
+      "additionalProperties": false,
+      "properties": {
+        "authentication": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PasswordAuthentication"
+            },
+            {
+              "$ref": "#/$defs/Auth0Authentication"
+            },
+            {
+              "$ref": "#/$defs/GitHubAuthentication"
+            }
+          ],
+          "default": {
+            "type": "password"
+          },
+          "title": "Authentication"
+        },
+        "shared_users_group": {
+          "default": true,
+          "title": "Shared Users Group",
+          "type": "boolean"
+        },
+        "keycloak": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/Keycloak"
+            }
+          ],
+          "default": {
+            "initial_root_password": "eeknigrjnlpkxeru",
+            "overrides": {},
+            "realm_display_name": "Nebari"
+          }
+        }
+      },
+      "title": "Security",
+      "type": "object"
+    },
+    "Storage": {
+      "additionalProperties": false,
+      "properties": {
+        "conda_store": {
+          "default": "200Gi",
+          "title": "Conda Store",
+          "type": "string"
+        },
+        "shared_filesystem": {
+          "default": "200Gi",
+          "title": "Shared Filesystem",
+          "type": "string"
+        }
+      },
+      "title": "Storage",
+      "type": "object"
+    },
+    "Telemetry": {
+      "additionalProperties": false,
+      "properties": {
+        "jupyterlab_pioneer": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/JupyterLabPioneer"
+            }
+          ],
+          "default": {
+            "enabled": false,
+            "log_format": null
+          }
+        }
+      },
+      "title": "Telemetry",
+      "type": "object"
     },
     "TerraformState": {
       "additionalProperties": false,
@@ -954,10 +2091,420 @@
       ],
       "title": "TerraformStateEnum",
       "type": "string"
+    },
+    "Theme": {
+      "additionalProperties": false,
+      "properties": {
+        "jupyterhub": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/JupyterHubTheme"
+            }
+          ],
+          "default": {
+            "accent_color": "#32C574",
+            "accent_color_dark": "#32C574",
+            "display_version": "True",
+            "favicon": "https://raw.githubusercontent.com/nebari-dev/nebari-design/main/symbol/favicon.ico",
+            "h1_color": "#652e8e",
+            "h2_color": "#652e8e",
+            "hub_subtitle": "Your open source data science platform",
+            "hub_title": "Nebari",
+            "logo": "https://raw.githubusercontent.com/nebari-dev/nebari-design/main/logo-mark/horizontal/Nebari-Logo-Horizontal-Lockup-White-text.svg",
+            "navbar_color": "#1c1d26",
+            "navbar_hover_color": "#db96f3",
+            "navbar_text_color": "#f1f1f6",
+            "primary_color": "#4f4173",
+            "primary_color_dark": "#4f4173",
+            "secondary_color": "#957da6",
+            "secondary_color_dark": "#957da6",
+            "text_color": "#111111",
+            "version": "v2024.4.2.dev18+g04d028c9.d20240508",
+            "welcome": "Welcome! Learn about Nebari's features and configurations in <a href=\"https://www.nebari.dev/docs\">the documentation</a>. If you have any questions or feedback, reach the team on <a href=\"https://www.nebari.dev/docs/community#getting-support\">Nebari's support forums</a>."
+          }
+        }
+      },
+      "title": "Theme",
+      "type": "object"
     }
   },
   "additionalProperties": false,
   "properties": {
+    "helm_extensions": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/HelmExtension"
+      },
+      "title": "Helm Extensions",
+      "type": "array"
+    },
+    "tf_extensions": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/NebariExtension"
+      },
+      "title": "Tf Extensions",
+      "type": "array"
+    },
+    "default_images": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/DefaultImages"
+        }
+      ],
+      "default": {
+        "dask_worker": "quay.io/nebari/nebari-dask-worker:2024.4.1",
+        "jupyterhub": "quay.io/nebari/nebari-jupyterhub:2024.4.1",
+        "jupyterlab": "quay.io/nebari/nebari-jupyterlab:2024.4.1"
+      }
+    },
+    "storage": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Storage"
+        }
+      ],
+      "default": {
+        "conda_store": "200Gi",
+        "shared_filesystem": "200Gi"
+      }
+    },
+    "theme": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Theme"
+        }
+      ],
+      "default": {
+        "jupyterhub": {
+          "accent_color": "#32C574",
+          "accent_color_dark": "#32C574",
+          "display_version": "True",
+          "favicon": "https://raw.githubusercontent.com/nebari-dev/nebari-design/main/symbol/favicon.ico",
+          "h1_color": "#652e8e",
+          "h2_color": "#652e8e",
+          "hub_subtitle": "Your open source data science platform",
+          "hub_title": "Nebari",
+          "logo": "https://raw.githubusercontent.com/nebari-dev/nebari-design/main/logo-mark/horizontal/Nebari-Logo-Horizontal-Lockup-White-text.svg",
+          "navbar_color": "#1c1d26",
+          "navbar_hover_color": "#db96f3",
+          "navbar_text_color": "#f1f1f6",
+          "primary_color": "#4f4173",
+          "primary_color_dark": "#4f4173",
+          "secondary_color": "#957da6",
+          "secondary_color_dark": "#957da6",
+          "text_color": "#111111",
+          "version": "v2024.4.2.dev18+g04d028c9.d20240508",
+          "welcome": "Welcome! Learn about Nebari's features and configurations in <a href=\"https://www.nebari.dev/docs\">the documentation</a>. If you have any questions or feedback, reach the team on <a href=\"https://www.nebari.dev/docs/community#getting-support\">Nebari's support forums</a>."
+        }
+      }
+    },
+    "profiles": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Profiles"
+        }
+      ],
+      "default": {
+        "dask_worker": {
+          "Medium Worker": {
+            "worker_cores": 3.0,
+            "worker_cores_limit": 4.0,
+            "worker_memory": "10G",
+            "worker_memory_limit": "16G",
+            "worker_threads": 4
+          },
+          "Small Worker": {
+            "worker_cores": 1.5,
+            "worker_cores_limit": 2.0,
+            "worker_memory": "5G",
+            "worker_memory_limit": "8G",
+            "worker_threads": 2
+          }
+        },
+        "jupyterlab": [
+          {
+            "access": "all",
+            "default": true,
+            "description": "Stable environment with 2 cpu / 8 GB ram",
+            "display_name": "Small Instance",
+            "groups": null,
+            "kubespawner_override": {
+              "cpu_guarantee": 1.5,
+              "cpu_limit": 2.0,
+              "mem_guarantee": "5G",
+              "mem_limit": "8G"
+            },
+            "users": null
+          },
+          {
+            "access": "all",
+            "default": false,
+            "description": "Stable environment with 4 cpu / 16 GB ram",
+            "display_name": "Medium Instance",
+            "groups": null,
+            "kubespawner_override": {
+              "cpu_guarantee": 3.0,
+              "cpu_limit": 4.0,
+              "mem_guarantee": "10G",
+              "mem_limit": "16G"
+            },
+            "users": null
+          }
+        ]
+      }
+    },
+    "environments": {
+      "additionalProperties": {
+        "$ref": "#/$defs/CondaEnvironment"
+      },
+      "default": {
+        "environment-dashboard.yaml": {
+          "channels": [
+            "conda-forge"
+          ],
+          "dependencies": [
+            "python==3.11.6",
+            "cufflinks-py==0.17.3",
+            "dash==2.14.1",
+            "geopandas==0.14.1",
+            "geopy==2.4.0",
+            "geoviews==1.11.0",
+            "gunicorn==21.2.0",
+            "holoviews==1.18.1",
+            "ipykernel==6.26.0",
+            "ipywidgets==8.1.1",
+            "jupyter==1.0.0",
+            "jupyter_bokeh==3.0.7",
+            "matplotlib==3.8.1",
+            "nebari-dask==2024.4.1",
+            "nodejs=20.8.1",
+            "numpy==1.26.0",
+            "openpyxl==3.1.2",
+            "pandas==2.1.3",
+            "panel==1.3.1",
+            "param==2.0.1",
+            "plotly==5.18.0",
+            "python-graphviz==0.20.1",
+            "rich==13.6.0",
+            "streamlit==1.28.1",
+            "sympy==1.12",
+            "voila==0.5.5",
+            "xarray==2023.10.1",
+            "pip==23.3.1",
+            {
+              "pip": [
+                "streamlit-image-comparison==0.0.4",
+                "noaa-coops==0.1.9",
+                "dash_core_components==2.0.0",
+                "dash_html_components==2.0.0"
+              ]
+            }
+          ],
+          "name": "dashboard"
+        },
+        "environment-dask.yaml": {
+          "channels": [
+            "conda-forge"
+          ],
+          "dependencies": [
+            "python==3.11.6",
+            "ipykernel==6.26.0",
+            "ipywidgets==8.1.1",
+            "nebari-dask==2024.4.1",
+            "python-graphviz==0.20.1",
+            "pyarrow==14.0.1",
+            "s3fs==2023.10.0",
+            "gcsfs==2023.10.0",
+            "numpy=1.26.0",
+            "numba=0.58.1",
+            "pandas=2.1.3",
+            "xarray==2023.10.1"
+          ],
+          "name": "dask"
+        }
+      },
+      "title": "Environments",
+      "type": "object"
+    },
+    "conda_store": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/CondaStore"
+        }
+      ],
+      "default": {
+        "default_namespace": "nebari-git",
+        "extra_config": "",
+        "extra_settings": {},
+        "image": "quansight/conda-store-server",
+        "image_tag": "2024.3.1",
+        "object_storage": "200Gi"
+      }
+    },
+    "argo_workflows": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ArgoWorkflows"
+        }
+      ],
+      "default": {
+        "enabled": true,
+        "nebari_workflow_controller": {
+          "enabled": true,
+          "image_tag": "2024.4.1"
+        },
+        "overrides": {}
+      }
+    },
+    "monitoring": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Monitoring"
+        }
+      ],
+      "default": {
+        "enabled": true,
+        "minio_enabled": true,
+        "overrides": {
+          "loki": {},
+          "minio": {},
+          "promtail": {}
+        }
+      }
+    },
+    "telemetry": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Telemetry"
+        }
+      ],
+      "default": {
+        "jupyterlab_pioneer": {
+          "enabled": false,
+          "log_format": null
+        }
+      }
+    },
+    "jupyterhub": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/JupyterHub"
+        }
+      ],
+      "default": {
+        "overrides": {}
+      }
+    },
+    "jupyterlab": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/JupyterLab"
+        }
+      ],
+      "default": {
+        "default_settings": {},
+        "idle_culler": {
+          "kernel_cull_busy": false,
+          "kernel_cull_connected": true,
+          "kernel_cull_idle_timeout": 15,
+          "kernel_cull_interval": 5,
+          "server_shutdown_no_activity_timeout": 15,
+          "terminal_cull_inactive_timeout": 15,
+          "terminal_cull_interval": 5
+        },
+        "initial_repositories": [],
+        "preferred_dir": null
+      }
+    },
+    "jhub_apps": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/JHubApps"
+        }
+      ],
+      "default": {
+        "enabled": false
+      }
+    },
+    "security": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Security"
+        }
+      ],
+      "default": {
+        "authentication": {
+          "type": "password"
+        },
+        "keycloak": {
+          "initial_root_password": "eeknigrjnlpkxeru",
+          "overrides": {},
+          "realm_display_name": "Nebari"
+        },
+        "shared_users_group": true
+      }
+    },
+    "domain": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Domain"
+    },
+    "certificate": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Certificate"
+        }
+      ],
+      "default": {
+        "acme_email": null,
+        "acme_server": "https://acme-v02.api.letsencrypt.org/directory",
+        "secret_name": null,
+        "type": "self-signed"
+      }
+    },
+    "ingress": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Ingress"
+        }
+      ],
+      "default": {
+        "terraform_overrides": {}
+      }
+    },
+    "dns": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/DnsProvider"
+        }
+      ],
+      "default": {
+        "auto_provision": false,
+        "provider": null
+      }
+    },
+    "external_container_reg": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ExtContainerReg"
+        }
+      ],
+      "default": {
+        "access_key_id": null,
+        "enabled": false,
+        "extcr_account": null,
+        "extcr_region": null,
+        "secret_access_key": null
+      }
+    },
     "local": {
       "anyOf": [
         {
@@ -1091,7 +2638,7 @@
       ]
     },
     "nebari_version": {
-      "default": "2024.4.2.dev17+g970ebd03.d20240508",
+      "default": "2024.4.2.dev18+g04d028c9.d20240508",
       "description": "The current installed version of Nebari. This is used to determine if the\nschema's version, the user must run `nebari upgrade` to ensure\ncompatibility.",
       "title": "Nebari Version",
       "type": "string"

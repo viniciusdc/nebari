@@ -756,6 +756,7 @@
               "min_nodes": 1
             }
           },
+          "description": "Node groups to create in the cluster",
           "title": "Node Groups",
           "type": "object"
         },
@@ -825,6 +826,13 @@
             }
           ],
           "default": null,
+          "description": "Optional Kubernetes context specifying which kube-config context to use. This is extremely useful when deploying to an existing cluster, especially when managing multiple clusters.",
+          "examples": {
+            "AWS": "Bellow is an example of how to set the `kube_context` field in the\nevent that you need to specify the correct cluster, when deploying into\nan existing AWS infrastructure:\n\n```yaml\nkube_context: arn:aws:eks:<region>:xxxxxxxxxxxx:cluster/\n```",
+            "Azure": "Bellow is an example of how to set the `kube_context` field in the\nevent that you need to specify the correct cluster, when deploying into\nan existing Azure infrastructure:\n\n```yaml\nkube_context: <cluster_name>\n```",
+            "DO": "Bellow is an example of how to set the `kube_context` field in the\nevent that you need to specify the correct cluster, when deploying into\nan existing Digital Ocean infrastructure:\n\n```yaml\nkube_context: <cluster_name>\n```",
+            "GCP": "Bellow is an example of how to set the `kube_context` field in the\nevent that you need to specify the correct cluster, when deploying into\nan existing GCP infrastructure:\n\n```yaml\nkube_context: gke_<project_id>_<region>_<cluster_name>\n```"
+          },
           "title": "Kube Context"
         },
         "node_selectors": {
@@ -844,6 +852,13 @@
               "key": "kubernetes.io/os",
               "value": "linux"
             }
+          },
+          "description": "Node selectors in Nebari target specific nodes for various workloads using a\n`KeyValueDict` object for each node category. The system categorizes nodes\nas `general`, `user`, and `worker`:\n\n- `general`: Deploys system components and mainstream services like\n  Conda-store, Argo, and JupyterHub.\n- `user`: Allocates JupyterLab instances to users.\n- `worker`: Handles computing-intensive services such as Dask and Argo\n  workflows.\n\nAdjustments may be necessary for pre-existing clusters to align node\nselectors with current node labels, particularly in cloud environments where\nnode pool labels are standard. These labels differ by cloud provider, so\nreviewing the provider's documentation is recommended:\n- Azure: `kubernetes.azure.com/agentpool` ([reserved system labels](https://learn.microsoft.com/en-us/azure/aks/use-labels#reserved-system-labels)).\n- AWS: `eks.amazonaws.com/nodegroup` ([managed node groups behavior](https://docs.aws.amazon.com/eks/latest/userguide/managed-node-update-behavior.html)).\n- GCP: `cloud.google.com/gke-nodepool` ([managing node pools](https://cloud.google.com/kubernetes-engine/docs/how-to/node-pools)).\n- Digital Ocean: `doks.digitalocean.com/node-pool` ([automatic labels\napplication](https://docs.digitalocean.com/products/kubernetes/details/managed/#automatic-application-of-labels-to-nodes)).",
+          "examples": {
+            "AWS": "Below is an example of how to set the `node_selectors` field in the\nevent that you need to specify the correct node group, when deploying\ninto an existing AWS infrastructure. It is of the utmost importance to\nensure that the node group label you are using (value) matches the\ngiven node group name in your AWS infrastructure:\n```yaml\nnode_selectors:\n    general:\n        key: \"eks.amazonaws.com/nodegroup\"\n        value: \"general\"\n    user:\n        key: \"eks.amazonaws.com/nodegroup\"\n        value: \"user\"\n    worker:\n        key: \"eks.amazonaws.com/nodegroup\"\n        value: \"worker\"\n    my_custom_node:\n        key: \"eks.amazonaws.com/nodegroup\"\n        value: \"my_custom_node\"\n```",
+            "Azure": "Below is an example of how to set the `node_selectors` field in the\nevent that you need to specify the correct node pool, when deploying into\nan existing Azure infrastructure. It is of the utmost importance to ensure\nthat the node pool label you are using (value) matches the given node pool\nname in your Azure infrastructure:\n```yaml\nnode_selectors:\n    general:\n        key: \"kubernetes.azure.com/agentpool\"\n        value: \"general\"\n    user:\n        key: \"kubernetes.azure.com/agentpool\"\n        value: \"user\"\n    worker:\n        key: \"kubernetes.azure.com/agentpool\"\n        value: \"worker\"\n    my_custom_node:\n        key: \"kubernetes.azure.com/agentpool\"\n        value: \"my_custom_node\"\n```",
+            "DO": "Below is an example of how to set the `node_selectors` field in the\nevent that you need to specify the correct node pool, when deploying into\nan existing Digital Ocean infrastructure. It is of the utmost importance to\nensure that the node pool label you are using (value) matches the given node\npool name in your Digital Ocean infrastructure:\n```yaml\nnode_selectors:\n    general:\n        key: \"doks.digitalocean.com/node-pool\"\n        value: \"general\"\n    user:\n        key: \"doks.digitalocean.com/node-pool\"\n        value: \"user\"\n    worker:\n        key: \"doks.digitalocean.com/node-pool\"\n        value: \"worker\"\n    my_custom_node:\n        key: \"doks.digitalocean.com/node-pool\"\n        value: \"my_custom_node\"\n```",
+            "GCP": "Below is an example of how to set the `node_selectors` field in the\nevent that you need to specify the correct node pool, when deploying into\nan existing GCP infrastructure. It is of the utmost importance to ensure\nthat the node pool label you are using (value) matches the given node\npool name in your GCP infrastructure:\n```yaml\nnode_selectors:\n    general:\n        key: \"cloud.google.com/gke-nodepool\"\n        value: \"general\"\n    user:\n        key: \"cloud.google.com/gke-nodepool\"\n        value: \"user\"\n    worker:\n        key: \"cloud.google.com/gke-nodepool\"\n        value: \"worker\"\n    my_custom_node:\n        key: \"cloud.google.com/gke-nodepool\"\n        value: \"my_custom_node\"\n```"
           },
           "title": "Node Selectors",
           "type": "object"
@@ -1418,7 +1433,7 @@
           "type": "string"
         },
         "version": {
-          "default": "v2024.4.2.dev18+g04d028c9.d20240508",
+          "default": "v2024.4.2.dev21+gd7b7bad2.d20240530",
           "title": "Version",
           "type": "string"
         },
@@ -1676,7 +1691,7 @@
             }
           ],
           "default": null,
-          "description": "Kube context",
+          "description": "Optional Kubernetes context specifying which kube-config context to use. Useful when managing multiple clusters. When using alongside Kind, during Nebari's deployment, this will be automatically set to `test-cluster`.",
           "title": "Kube Context"
         },
         "node_selectors": {
@@ -1697,6 +1712,10 @@
               "value": "linux"
             }
           },
+          "description": "Node selectors are used to target specific nodes for different workloads.\nEach key represents a node category, and the associated value specifies a\nselector in the form of a `KeyValueDict` object.\n\nThe `kubernetes.io/os` label is used here to ensure pods are scheduled on\nnodes with a matching operating system, when using alongside Kind, this will\nbe automatically match the created local nodes.\n\nNebari uses these selectors to deploy different components on the cluster\nbased on their given categories. By default, Nebari expects the following\nnode categories: `general`, `user`, and `worker`.\n\nWhereas `general` is used for system components, and mainstream services, such\nas Conda-store, Argo, JupyterHub and others. `user` is especificaly used for\nJupyterLab user instances during spawn, and `worker` is used for any other\nservice that requires computing power, such as Dask, Argo workflows, etc.",
+          "examples": [
+            "Besides the defaults nodes, you can add a any other node category by\nadding a new key to the `node_selectors` dictionary. Just be aware, that\nyou need to ensure that the label you are using is present in the nodes\nyou want to target.\n\n```yaml\nnode_selectors:\n    ...\n    dashboard:\n        key: \"kubernetes.io/os\"\n        value: \"linux\"\n    arm-worker:\n        key: \"kubernetes.io/arch\"\n        value: \"arm64\"\n```"
+          ],
           "title": "Node Selectors",
           "type": "object"
         }
@@ -1993,7 +2012,7 @@
             }
           ],
           "default": {
-            "initial_root_password": "eeknigrjnlpkxeru",
+            "initial_root_password": "l0z6su3pywmsdw27",
             "overrides": {},
             "realm_display_name": "Nebari"
           }
@@ -2119,7 +2138,7 @@
             "secondary_color": "#957da6",
             "secondary_color_dark": "#957da6",
             "text_color": "#111111",
-            "version": "v2024.4.2.dev18+g04d028c9.d20240508",
+            "version": "v2024.4.2.dev21+gd7b7bad2.d20240530",
             "welcome": "Welcome! Learn about Nebari's features and configurations in <a href=\"https://www.nebari.dev/docs\">the documentation</a>. If you have any questions or feedback, reach the team on <a href=\"https://www.nebari.dev/docs/community#getting-support\">Nebari's support forums</a>."
           }
         }
@@ -2194,7 +2213,7 @@
           "secondary_color": "#957da6",
           "secondary_color_dark": "#957da6",
           "text_color": "#111111",
-          "version": "v2024.4.2.dev18+g04d028c9.d20240508",
+          "version": "v2024.4.2.dev21+gd7b7bad2.d20240530",
           "welcome": "Welcome! Learn about Nebari's features and configurations in <a href=\"https://www.nebari.dev/docs\">the documentation</a>. If you have any questions or feedback, reach the team on <a href=\"https://www.nebari.dev/docs/community#getting-support\">Nebari's support forums</a>."
         }
       }
@@ -2438,7 +2457,7 @@
           "type": "password"
         },
         "keycloak": {
-          "initial_root_password": "eeknigrjnlpkxeru",
+          "initial_root_password": "l0z6su3pywmsdw27",
           "overrides": {},
           "realm_display_name": "Nebari"
         },
@@ -2514,9 +2533,11 @@
           "type": "null"
         }
       ],
-      "default": null,
-      "description": "Local provider",
-      "group_by": "provider"
+      "depends_on": {
+        "provider": "local"
+      },
+      "description": "Local deployment is intended for Nebari deployments on a `local` cluster\ncreated and management by [Kind](https://kind.sigs.k8s.io/). It is great for experimentation and\ndevelopment.",
+      "warning": "Support for local deployments have only been fully tested on Linux based\nsystems. MacOS support is currently experimental."
     },
     "existing": {
       "anyOf": [
@@ -2527,9 +2548,11 @@
           "type": "null"
         }
       ],
-      "default": null,
-      "description": "Existing provider",
-      "group_by": "provider"
+      "depends_on": {
+        "provider": "existing"
+      },
+      "description": "Originally designed for Nebari deployments on `local` clusters, this feature\nhas since expanded to allow users to deploy Nebari to any\nexisting kubernetes cluster. This is useful for deploying Nebari to\nmore controlled environments where cluster management is already in place.",
+      "note": "By default, Nebari will render the deployment mode similar to how `local`\nworks. Which means that, without extra configuration, the deployment of the\ncluster infrastructure will assume the presence a local cluster, already\ncreated by tools like k3s, Kind or MiniKube, and the default settings for\nboth `kube_context` and `node_selector` will be used."
     },
     "google_cloud_platform": {
       "anyOf": [
@@ -2540,9 +2563,10 @@
           "type": "null"
         }
       ],
-      "default": null,
-      "description": "Google Cloud Platform provider",
-      "group_by": "provider"
+      "depends_on": {
+        "provider": "gcp"
+      },
+      "description": "The Google Cloud Platform provider is tailored for deploying Nebari on GCP's\nrobust, secure, and scalable infrastructure. It enables seamless integration\nwith GCP services like Google Kubernetes Engine (GKE), ensuring optimized\nperformance and management for enterprise-grade applications."
     },
     "amazon_web_services": {
       "anyOf": [
@@ -2553,9 +2577,10 @@
           "type": "null"
         }
       ],
-      "default": null,
-      "description": "Amazon Web Services provider",
-      "group_by": "provider"
+      "depends_on": {
+        "provider": "aws"
+      },
+      "description": "This provider facilitates Nebari deployments on Amazon Web Services, leveraging\nAWS's extensive cloud capabilities. It's ideal for users looking to integrate\nwith AWS's managed Kubernetes service, EKS, and utilize AWS's wide range of\ncloud solutions for enhanced scalability and reliability."
     },
     "azure": {
       "anyOf": [
@@ -2566,9 +2591,10 @@
           "type": "null"
         }
       ],
-      "default": null,
-      "description": "Azure provider",
-      "group_by": "provider"
+      "depends_on": {
+        "provider": "azure"
+      },
+      "description": "Azure provider supports deploying Nebari on Microsoft Azure's cloud\nplatform, using Azure Kubernetes Service (AKS). This provider is perfect for\nenterprises that require integration with Microsoft's cloud ecosystem and\nwant to benefit from Azure's enterprise-focused services and security\nfeatures."
     },
     "digital_ocean": {
       "anyOf": [
@@ -2579,9 +2605,10 @@
           "type": "null"
         }
       ],
-      "default": null,
-      "description": "Digital Ocean provider",
-      "group_by": "provider"
+      "depends_on": {
+        "provider": "do"
+      },
+      "description": "Designed for Nebari deployments on Digital Ocean, this provider simplifies\nthe process of managing Kubernetes clusters through Digital Ocean Kubernetes\n(DOKS) and their on deman machines, called Droplets.\n\nIt's a great choice for users looking to deploy applications on a cloud\nplatform that's easy to use, while offering a wide range of services and\nintegrations."
     },
     "terraform_state": {
       "allOf": [
@@ -2638,7 +2665,7 @@
       ]
     },
     "nebari_version": {
-      "default": "2024.4.2.dev18+g04d028c9.d20240508",
+      "default": "2024.4.2.dev21+gd7b7bad2.d20240530",
       "description": "The current installed version of Nebari. This is used to determine if the\nschema's version, the user must run `nebari upgrade` to ensure\ncompatibility.",
       "title": "Nebari Version",
       "type": "string"

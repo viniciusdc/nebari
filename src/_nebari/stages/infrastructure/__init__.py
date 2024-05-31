@@ -5,6 +5,7 @@ import pathlib
 import re
 import sys
 import tempfile
+from inspect import cleandoc
 from typing import Annotated, Any, Dict, List, Optional, Tuple, Type, Union
 
 from pydantic import Field, field_validator, model_validator
@@ -233,7 +234,10 @@ class DigitalOceanProvider(schema.Base):
     region: str
     kubernetes_version: Optional[str] = None
     # Digital Ocean image slugs are listed here https://slugs.do-api.dev/
-    node_groups: Dict[str, DigitalOceanNodeGroup] = DEFAULT_DO_NODE_GROUPS
+    node_groups: Dict[str, DigitalOceanNodeGroup] = Field(
+        default=DEFAULT_DO_NODE_GROUPS,
+        description="Node groups to create in the cluster",
+    )
     tags: Optional[List[str]] = []
 
     @model_validator(mode="before")
@@ -508,21 +512,243 @@ class AmazonWebServicesProvider(schema.Base):
 
 
 class LocalProvider(schema.Base):
-    kube_context: Optional[str] = Field(default=None, description="Kube context")
-    node_selectors: Dict[str, KeyValueDict] = {
-        "general": KeyValueDict(key="kubernetes.io/os", value="linux"),
-        "user": KeyValueDict(key="kubernetes.io/os", value="linux"),
-        "worker": KeyValueDict(key="kubernetes.io/os", value="linux"),
-    }
+    kube_context: Optional[str] = Field(
+        default=None,
+        description=cleandoc(
+            "Optional Kubernetes context specifying which kube-config context to use. Useful when managing multiple clusters. When using alongside Kind, during Nebari's deployment, this will be automatically set to `test-cluster`."
+        ),
+    )
+    node_selectors: Dict[str, KeyValueDict] = Field(
+        default={
+            "general": KeyValueDict(key="kubernetes.io/os", value="linux"),
+            "user": KeyValueDict(key="kubernetes.io/os", value="linux"),
+            "worker": KeyValueDict(key="kubernetes.io/os", value="linux"),
+        },
+        description=cleandoc(
+            """
+            Node selectors are used to target specific nodes for different workloads.
+            Each key represents a node category, and the associated value specifies a
+            selector in the form of a `KeyValueDict` object.
+
+            The `kubernetes.io/os` label is used here to ensure pods are scheduled on
+            nodes with a matching operating system, when using alongside Kind, this will
+            be automatically match the created local nodes.
+
+            Nebari uses these selectors to deploy different components on the cluster
+            based on their given categories. By default, Nebari expects the following
+            node categories: `general`, `user`, and `worker`.
+
+            Whereas `general` is used for system components, and mainstream services, such
+            as Conda-store, Argo, JupyterHub and others. `user` is especificaly used for
+            JupyterLab user instances during spawn, and `worker` is used for any other
+            service that requires computing power, such as Dask, Argo workflows, etc.
+            """
+        ),
+        examples=[
+            cleandoc(
+                """
+                Besides the defaults nodes, you can add a any other node category by
+                adding a new key to the `node_selectors` dictionary. Just be aware, that
+                you need to ensure that the label you are using is present in the nodes
+                you want to target.
+
+                ```yaml
+                node_selectors:
+                    ...
+                    dashboard:
+                        key: "kubernetes.io/os"
+                        value: "linux"
+                    arm-worker:
+                        key: "kubernetes.io/arch"
+                        value: "arm64"
+                ```
+                """
+            ),
+        ],
+    )
 
 
 class ExistingProvider(schema.Base):
-    kube_context: Optional[str] = None
-    node_selectors: Dict[str, KeyValueDict] = {
-        "general": KeyValueDict(key="kubernetes.io/os", value="linux"),
-        "user": KeyValueDict(key="kubernetes.io/os", value="linux"),
-        "worker": KeyValueDict(key="kubernetes.io/os", value="linux"),
-    }
+    kube_context: Optional[str] = Field(
+        default=None,
+        description=cleandoc(
+            "Optional Kubernetes context specifying which kube-config context to use. This is extremely useful when deploying to an existing cluster, especially when managing multiple clusters."
+        ),
+        examples={
+            "AWS": cleandoc(
+                """
+                Bellow is an example of how to set the `kube_context` field in the
+                event that you need to specify the correct cluster, when deploying into
+                an existing AWS infrastructure:
+
+                ```yaml
+                kube_context: arn:aws:eks:<region>:xxxxxxxxxxxx:cluster/
+                ```
+                """
+            ),
+            "GCP": cleandoc(
+                """
+                Bellow is an example of how to set the `kube_context` field in the
+                event that you need to specify the correct cluster, when deploying into
+                an existing GCP infrastructure:
+
+                ```yaml
+                kube_context: gke_<project_id>_<region>_<cluster_name>
+                ```
+                """
+            ),
+            "Azure": cleandoc(
+                """
+                Bellow is an example of how to set the `kube_context` field in the
+                event that you need to specify the correct cluster, when deploying into
+                an existing Azure infrastructure:
+
+                ```yaml
+                kube_context: <cluster_name>
+                ```
+                """
+            ),
+            "DO": cleandoc(
+                """
+                Bellow is an example of how to set the `kube_context` field in the
+                event that you need to specify the correct cluster, when deploying into
+                an existing Digital Ocean infrastructure:
+
+                ```yaml
+                kube_context: <cluster_name>
+                ```
+                """
+            ),
+        },
+    )
+    node_selectors: Dict[str, KeyValueDict] = Field(
+        default={
+            "general": KeyValueDict(key="kubernetes.io/os", value="linux"),
+            "user": KeyValueDict(key="kubernetes.io/os", value="linux"),
+            "worker": KeyValueDict(key="kubernetes.io/os", value="linux"),
+        },
+        description=cleandoc(
+            """
+            Node selectors in Nebari target specific nodes for various workloads using a
+            `KeyValueDict` object for each node category. The system categorizes nodes
+            as `general`, `user`, and `worker`:
+
+            - `general`: Deploys system components and mainstream services like
+              Conda-store, Argo, and JupyterHub.
+            - `user`: Allocates JupyterLab instances to users.
+            - `worker`: Handles computing-intensive services such as Dask and Argo
+              workflows.
+
+            Adjustments may be necessary for pre-existing clusters to align node
+            selectors with current node labels, particularly in cloud environments where
+            node pool labels are standard. These labels differ by cloud provider, so
+            reviewing the provider's documentation is recommended:
+            - Azure: `kubernetes.azure.com/agentpool` ([reserved system labels](https://learn.microsoft.com/en-us/azure/aks/use-labels#reserved-system-labels)).
+            - AWS: `eks.amazonaws.com/nodegroup` ([managed node groups behavior](https://docs.aws.amazon.com/eks/latest/userguide/managed-node-update-behavior.html)).
+            - GCP: `cloud.google.com/gke-nodepool` ([managing node pools](https://cloud.google.com/kubernetes-engine/docs/how-to/node-pools)).
+            - Digital Ocean: `doks.digitalocean.com/node-pool` ([automatic labels
+            application](https://docs.digitalocean.com/products/kubernetes/details/managed/#automatic-application-of-labels-to-nodes)).
+            """
+        ),
+        examples={
+            "AWS": cleandoc(
+                """
+                Below is an example of how to set the `node_selectors` field in the
+                event that you need to specify the correct node group, when deploying
+                into an existing AWS infrastructure. It is of the utmost importance to
+                ensure that the node group label you are using (value) matches the
+                given node group name in your AWS infrastructure:
+                ```yaml
+                node_selectors:
+                    general:
+                        key: "eks.amazonaws.com/nodegroup"
+                        value: "general"
+                    user:
+                        key: "eks.amazonaws.com/nodegroup"
+                        value: "user"
+                    worker:
+                        key: "eks.amazonaws.com/nodegroup"
+                        value: "worker"
+                    my_custom_node:
+                        key: "eks.amazonaws.com/nodegroup"
+                        value: "my_custom_node"
+                ```
+                """
+            ),
+            "GCP": cleandoc(
+                """
+                Below is an example of how to set the `node_selectors` field in the
+                event that you need to specify the correct node pool, when deploying into
+                an existing GCP infrastructure. It is of the utmost importance to ensure
+                that the node pool label you are using (value) matches the given node
+                pool name in your GCP infrastructure:
+                ```yaml
+                node_selectors:
+                    general:
+                        key: "cloud.google.com/gke-nodepool"
+                        value: "general"
+                    user:
+                        key: "cloud.google.com/gke-nodepool"
+                        value: "user"
+                    worker:
+                        key: "cloud.google.com/gke-nodepool"
+                        value: "worker"
+                    my_custom_node:
+                        key: "cloud.google.com/gke-nodepool"
+                        value: "my_custom_node"
+                ```
+                """
+            ),
+            "Azure": cleandoc(
+                """
+                Below is an example of how to set the `node_selectors` field in the
+                event that you need to specify the correct node pool, when deploying into
+                an existing Azure infrastructure. It is of the utmost importance to ensure
+                that the node pool label you are using (value) matches the given node pool
+                name in your Azure infrastructure:
+                ```yaml
+                node_selectors:
+                    general:
+                        key: "kubernetes.azure.com/agentpool"
+                        value: "general"
+                    user:
+                        key: "kubernetes.azure.com/agentpool"
+                        value: "user"
+                    worker:
+                        key: "kubernetes.azure.com/agentpool"
+                        value: "worker"
+                    my_custom_node:
+                        key: "kubernetes.azure.com/agentpool"
+                        value: "my_custom_node"
+                ```
+                """
+            ),
+            "DO": cleandoc(
+                """
+                Below is an example of how to set the `node_selectors` field in the
+                event that you need to specify the correct node pool, when deploying into
+                an existing Digital Ocean infrastructure. It is of the utmost importance to
+                ensure that the node pool label you are using (value) matches the given node
+                pool name in your Digital Ocean infrastructure:
+                ```yaml
+                node_selectors:
+                    general:
+                        key: "doks.digitalocean.com/node-pool"
+                        value: "general"
+                    user:
+                        key: "doks.digitalocean.com/node-pool"
+                        value: "user"
+                    worker:
+                        key: "doks.digitalocean.com/node-pool"
+                        value: "worker"
+                    my_custom_node:
+                        key: "doks.digitalocean.com/node-pool"
+                        value: "my_custom_node"
+                ```
+                """
+            ),
+        },
+    )
 
 
 provider_enum_model_map = {
@@ -546,7 +772,8 @@ provider_enum_name_map: Dict[schema.ProviderEnum, str] = {
 provider_name_abbreviation_map: Dict[str, str] = {
     value: key.value for key, value in provider_enum_name_map.items()
 }
-
+# This is used as part of Upgrade_2024_4_1 when users din't have the corresponding
+# provider configuration in their configuration file.
 provider_enum_default_node_groups_map: Dict[schema.ProviderEnum, Any] = {
     schema.ProviderEnum.gcp: node_groups_to_dict(DEFAULT_GCP_NODE_GROUPS),
     schema.ProviderEnum.aws: node_groups_to_dict(DEFAULT_AWS_NODE_GROUPS),
@@ -557,24 +784,102 @@ provider_enum_default_node_groups_map: Dict[schema.ProviderEnum, Any] = {
 
 class InputSchema(schema.Base):
     local: Optional[LocalProvider] = Field(
-        default=None, description="Local provider", group_by="provider"
+        default_factory=lambda _: LocalProvider(),
+        description=cleandoc(
+            """
+            Local deployment is intended for Nebari deployments on a `local` cluster
+            created and management by [Kind](https://kind.sigs.k8s.io/). It is great for experimentation and
+            development.
+            """
+        ),
+        warning=cleandoc(
+            """
+            Support for local deployments have only been fully tested on Linux based
+            systems. MacOS support is currently experimental.
+            """
+        ),
+        depends_on={"provider": schema.ProviderEnum.local},
     )
     existing: Optional[ExistingProvider] = Field(
-        default=None, description="Existing provider", group_by="provider"
+        default_factory=lambda: ExistingProvider(),
+        description=cleandoc(
+            """
+            Originally designed for Nebari deployments on `local` clusters, this feature
+            has since expanded to allow users to deploy Nebari to any
+            existing kubernetes cluster. This is useful for deploying Nebari to
+            more controlled environments where cluster management is already in place.
+            """
+        ),
+        note=cleandoc(
+            """
+            By default, Nebari will render the deployment mode similar to how `local`
+            works. Which means that, without extra configuration, the deployment of the
+            cluster infrastructure will assume the presence a local cluster, already
+            created by tools like k3s, Kind or MiniKube, and the default settings for
+            both `kube_context` and `node_selector` will be used.
+            """
+        ),
+        depends_on={"provider": schema.ProviderEnum.existing},
+        # group_by="provider",
     )
     google_cloud_platform: Optional[GoogleCloudPlatformProvider] = Field(
-        default=None, description="Google Cloud Platform provider", group_by="provider"
+        default_factory=lambda: GoogleCloudPlatformProvider(),
+        description=cleandoc(
+            """
+            The Google Cloud Platform provider is tailored for deploying Nebari on GCP's
+            robust, secure, and scalable infrastructure. It enables seamless integration
+            with GCP services like Google Kubernetes Engine (GKE), ensuring optimized
+            performance and management for enterprise-grade applications.
+            """
+        ),
+        depends_on={"provider": schema.ProviderEnum.gcp},
+        # group_by="provider",
     )
     amazon_web_services: Optional[AmazonWebServicesProvider] = Field(
-        default=None, description="Amazon Web Services provider", group_by="provider"
+        default_factory=lambda: AmazonWebServicesProvider(),
+        description=cleandoc(
+            """
+            This provider facilitates Nebari deployments on Amazon Web Services, leveraging
+            AWS's extensive cloud capabilities. It's ideal for users looking to integrate
+            with AWS's managed Kubernetes service, EKS, and utilize AWS's wide range of
+            cloud solutions for enhanced scalability and reliability.
+            """
+        ),
+        depends_on={"provider": schema.ProviderEnum.aws},
+        # group_by="provider",
     )
     azure: Optional[AzureProvider] = Field(
-        default=None, description="Azure provider", group_by="provider"
+        default_factory=lambda: AzureProvider(),
+        description=cleandoc(
+            """
+            Azure provider supports deploying Nebari on Microsoft Azure's cloud
+            platform, using Azure Kubernetes Service (AKS). This provider is perfect for
+            enterprises that require integration with Microsoft's cloud ecosystem and
+            want to benefit from Azure's enterprise-focused services and security
+            features.
+            """
+        ),
+        depends_on={"provider": schema.ProviderEnum.azure},
+        # group_by="provider",
     )
     digital_ocean: Optional[DigitalOceanProvider] = Field(
-        default=None, description="Digital Ocean provider", group_by="provider"
+        default_factory=lambda: DigitalOceanProvider(),
+        description=cleandoc(
+            """
+            Designed for Nebari deployments on Digital Ocean, this provider simplifies
+            the process of managing Kubernetes clusters through Digital Ocean Kubernetes
+            (DOKS) and their on deman machines, called Droplets.
+
+            It's a great choice for users looking to deploy applications on a cloud
+            platform that's easy to use, while offering a wide range of services and
+            integrations.
+            """
+        ),
+        depends_on={"provider": schema.ProviderEnum.do},
+        # group_by="provider",
     )
 
+    # NOTE: This will most probably be refactor as part of #2497
     @model_validator(mode="before")
     @classmethod
     def check_provider(cls, data: Any) -> Any:

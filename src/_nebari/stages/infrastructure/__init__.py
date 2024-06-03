@@ -1024,37 +1024,75 @@ class AmazonWebServicesProvider(schema.Base):
         description=cleandoc(
             """
             The geographical region where your Amazon Web Services Kubernetes cluster
-            will be deployed. By default, during Nebari initialization, the region is
-            automatically set to the current value of `AWS_DEFAULT_REGION` constant. For more
-            details on its implementation, see the `init.py:check_cloud_provider_region` function.
+            will be deployed. By default, during Nebari initialization, if the region is
+            value is not specified by the user, Nebari will
+            automatically set to `us-east-1`.
             """
         ),
         note=cleandoc(
             """
-            The available regions can be found at Amazon Web Services' [select a
-            region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions) page.
-            keep in mind that changing regions may affect the latency of your services.
+            For a complete list of regions and services, see the [AWS Available
+            Regions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions)
+            page. keep in mind that changing regions may affect the latency of your
+            services.
             """
         ),
         warning=cleandoc(
-            """In case of Nebari have been already deployed, if triggered, it will
-            attempt to create a new cluster in the new region and conflicts may arise.
+            """Any changes to the region must be done **before** the cluster is
+            created. This is due to Terraform re-use of the region across all
+            resources, changing the region after the cluster has been created will cause
+            a complete rebuild of the cluster.
             """
         ),
+        examples=[
+            cleandoc(
+                """
+                As an example, to deploy the cluster in the `us-west-2` region, set the region field
+                to `us-west-2`.
+
+                ```yaml
+                amazon_web_services:
+                    ...
+                    region: us-west-2
+                ```
+                """
+            )
+        ],
     )
     kubernetes_version: str = Field(
         None,
         description=cleandoc(
             """
-            The specific version of Kubernetes to use for your cluster. Leaving this field
-            as None will use the latest version supported by Amazon Web Services.
+            The specific version of Kubernetes to use for your EKS cluster.
 
-            By default, Nebari will run a check during initiation for all the
-            available supported versions of kubernetes in the selected region and will
-            use the latest version available. General implementation details can be
-            found in the
-            [initialize.py](https://github.com/nebari-dev/nebari/blob/develop/src/_nebari/initialize.py#L120-L133)
-            file.
+            By default, Nebari will run a check during generation of the
+            `nebari-config.yaml` for all the available supported versions of kubernetes
+            in the selected region and will use the latest version available.
+
+            This field can also be used, post deployment, to upgrade the cluster to a
+            newer version of Kubernetes.
+            """
+        ),
+        examples=[
+            cleandoc(
+                """
+                As an example, to deploy the cluster with Kubernetes version `1.21`, set the
+                `kubernetes_version` field to `1.21`.
+
+                ```yaml
+                amazon_web_services:
+                    ...
+                    kubernetes_version: 1.21
+                ```
+                """
+            )
+        ],
+        note=cleandoc(
+            """
+            As Kubernetes versions are released, the list of supported versions for your
+            cloud provider may change. Some providers charge some fees for keeping older
+            unsupported versions running. We recommend keeping your cluster up to date
+            with the latest supported version.
             """
         ),
     )
@@ -1062,28 +1100,34 @@ class AmazonWebServicesProvider(schema.Base):
         default=[],
         description=cleandoc(
             """
-            A list of availability zones in which to deploy your EKS cluster. By default, Nebari will automatically set this field to
-            the first two availability zones in the selected region.
+            A list of [AWS availability
+            zones](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-availability-zones)
+            in which to deploy your EKS cluster and persistent volumes. Must be chosen from the supported zones
+            of your current region.
 
-            If your region of choice was `us-east-1`, the default availability zones
-            would be `['us-east-1a', 'us-east-1b']`. Those values are fetched from the
-            aws api and are subject to change.
+            By default, Nebari will automatically set this field to
+            the first two availability zones of your chosen region without directly
+            exposing the configuration field in the `nebari-config.yaml` file.
+            For example, if your region of choice was `us-east-1`, the default availability zones would be:
+            ```['us-east-1a', 'us-east-1b']```
+
+            Those values are fetched from the aws api and are subject to change.
             """
         ),
         note=cleandoc(
             """
-            The available availability zones can be found at Amazon Web Services'
-            [select a region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions)
-            page. Keep in mind that different availability zones may have different
-            affects on the latency of your services.
+            A list for all supported availability zones can be found at the [AWS Global
+            Infrastructure](https://aws.amazon.com/about-aws/global-infrastructure/regions_az/)
+            page as well as the [AWS Regional Services
+            List](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions).
             """
         ),
-        warning=cleandoc(
-            """Do not update this field after the cluster has been created, as it may
-            cause issues with the cluster's networking configuration and may lead to a
-            complete cluster rebuild.
-            """
-        ),
+        # warning=cleandoc(
+        #     """Do not update this field after the cluster has been created, as it may
+        #     cause issues with the cluster's networking configuration and may lead to a
+        #     complete cluster rebuild.
+        #     """
+        # ),
     )
     node_groups: Dict[str, AWSNodeGroup] = Field(
         default=DEFAULT_AWS_NODE_GROUPS,
@@ -1669,23 +1713,24 @@ class InputSchema(schema.Base):
         default_factory=lambda: AmazonWebServicesProvider(),
         description=cleandoc(
             """
-            This provider facilitates Nebari deployments on [Amazon Web Services (AWS)](https://aws.amazon.com/eks/), leveraging
-            AWS's extensive cloud capabilities.
+            The following configuration options are available for deploying Nebari on
+            AWS, using Amazon Elastic Kubernetes Service (EKS).
+
+            These settings allows
+            Nebari to manage the Kubernetes version, availability zones, and node groups
+            as well as extra configurations like GPU support and permissions boundaries.
             """
         ),
         depends_on={"provider": schema.ProviderEnum.aws},
         examples=[
             cleandoc(
                 """
-                Below is a full example of how the defaults values are set for the
-                AWS provider:
+                Below is an example of the basic configuration options required for
+                deploying, using the AWS provider:
                 ```yaml
                 amazon_web_services:
                     region: us-west-2
                     kubernetes_version: 1.21
-                    availability_zones:
-                        - us-west-2a
-                        - us-west-2b
                     node_groups:
                         general:
                             instance: m5.2xlarge

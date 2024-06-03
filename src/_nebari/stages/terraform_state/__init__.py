@@ -128,6 +128,13 @@ class TerraformState(schema.Base):
             configuration manually.
             """
         ),
+        note=cleandoc(
+            """
+            For a full overview of Terraform's supported backends and their
+            configuration, visit the [Terraform Backends documentation](https://developer.hashicorp.com/terraform/language/settings/backends/configuration).
+            """
+        ),
+        depends_ond={"type": TerraformStateEnum.existing},
     )
     config: Dict[str, str] = Field(
         default_factory=dict,
@@ -138,6 +145,7 @@ class TerraformState(schema.Base):
             supported backends and their configuration options, see the [Terraform
             Backednds](https://developer.hashicorp.com/terraform/language/settings/backends/configuration#available-backends)
             documentation.
+            ```
             """
         ),
         examples=[
@@ -150,6 +158,7 @@ class TerraformState(schema.Base):
                 with the following configuration options:
 
                 ```yaml
+                backend: kubernetes
                 config:
                     secret_suffix: my-secret-suffix
                     labels:
@@ -160,6 +169,7 @@ class TerraformState(schema.Base):
                 """
             ),
         ],
+        depends_on={"type": TerraformStateEnum.existing},
     )
 
     @model_validator(mode="after")

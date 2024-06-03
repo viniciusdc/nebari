@@ -77,6 +77,12 @@ class Main(Base):
             used when deploying kubernetes resources. Defaults to `dev`.
         """
         ),
+        note=cleandoc(
+            """
+            On cloud deployments, the `namespace` field is also used to generate the
+            kubernetes cluster name once fully deployed. Following the format of `<project_name>-<namespace>`.
+            """
+        ),
     )
     provider: ProviderEnum = Field(
         default=ProviderEnum.local,
@@ -117,13 +123,20 @@ class Main(Base):
             compatibility.
         """
         ),
+        note=cleandoc(
+            """
+            If Nebari has being installed in a development environment, such as `pip
+            install -e`, the version will receive a `.dev` suffix based on the current
+            commit hash. For example, `2024.4.2.dev21+gd7b7bad2.d20220401`.
+            """
+        ),
     )
     prevent_deploy: bool = Field(
         default=False,
         description=cleandoc(
             """
             Controls whether deployment is blocked post-upgrade. Setting this field to
-            'True' helps ensure that users do not inadvertently redeploy without being
+            `True` helps ensure that users do not inadvertently redeploy without being
             aware of necessary configurations and updates, thus safeguarding the
             stability and integrity of the deployment.
         """

@@ -4,25 +4,31 @@
       "additionalProperties": false,
       "properties": {
         "instance": {
+          "description": "The instance type to use for nodes in this node group. Refer to the Amazon\nWeb Services instance types documentation to choose an appropriate instance\ntype based on your needs.",
           "title": "Instance",
           "type": "string"
         },
         "min_nodes": {
           "default": 0,
+          "description": "The minimum number of nodes in this node group. This helps ensure that your\ncluster scales according to workload demands while maintaining a baseline\ncapacity.",
           "title": "Min Nodes",
           "type": "integer"
         },
         "max_nodes": {
+          "default": 1,
+          "description": "The maximum number of nodes in this node group. This setting limits the\nscaling capability of your cluster to prevent over-provisioning of\nresources.",
           "title": "Max Nodes",
           "type": "integer"
         },
         "gpu": {
           "default": false,
+          "description": "Determines whether to enable GPU support for nodes in this node group. This\nsetting is useful for workloads that require GPU acceleration.",
           "title": "Gpu",
           "type": "boolean"
         },
         "single_subnet": {
           "default": false,
+          "description": "Determines whether to use a single subnet for all nodes in this node group.\nThis setting is useful for simplifying network configurations and reducing\ncomplexity.",
           "title": "Single Subnet",
           "type": "boolean"
         },
@@ -36,12 +42,12 @@
             }
           ],
           "default": null,
+          "description": "The ARN of the permissions boundary to use for the Amazon Web Services\nKubernetes cluster. By default, Nebari will automatically set this field to\n`None`. For more details on its implementation, see the\n`init.py:check_cloud_provider_region` function.",
           "title": "Permissions Boundary"
         }
       },
       "required": [
-        "instance",
-        "max_nodes"
+        "instance"
       ],
       "title": "AWSNodeGroup",
       "type": "object"
@@ -59,10 +65,15 @@
       "additionalProperties": false,
       "properties": {
         "region": {
+          "description": "The geographical region where your Amazon Web Services Kubernetes cluster\nwill be deployed. By default, during Nebari initialization, the region is\nautomatically set to the current value of `AWS_DEFAULT_REGION` constant. For more\ndetails on its implementation, see the `init.py:check_cloud_provider_region` function.",
+          "note": "The available regions can be found at Amazon Web Services' [select a\nregion](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions) page.\nkeep in mind that changing regions may affect the latency of your services.",
           "title": "Region",
-          "type": "string"
+          "type": "string",
+          "warning": "In case of Nebari have been already deployed, if triggered, it will\nattempt to create a new cluster in the new region and conflicts may arise."
         },
         "kubernetes_version": {
+          "default": null,
+          "description": "The specific version of Kubernetes to use for your cluster. Leaving this field\nas None will use the latest version supported by Amazon Web Services.\n\nBy default, Nebari will run a check during initiation for all the\navailable supported versions of kubernetes in the selected region and will\nuse the latest version available. General implementation details can be\nfound in the\n[initialize.py](https://github.com/nebari-dev/nebari/blob/develop/src/_nebari/initialize.py#L120-L133)\nfile.",
           "title": "Kubernetes Version",
           "type": "string"
         },
@@ -78,7 +89,11 @@
               "type": "null"
             }
           ],
-          "title": "Availability Zones"
+          "default": [],
+          "description": "A list of availability zones in which to deploy your EKS cluster. By default, Nebari will automatically set this field to\nthe first two availability zones in the selected region.\n\nIf your region of choice was `us-east-1`, the default availability zones\nwould be `['us-east-1a', 'us-east-1b']`. Those values are fetched from the\naws api and are subject to change.",
+          "note": "The available availability zones can be found at Amazon Web Services'\n[select a region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions)\npage. Keep in mind that different availability zones may have different\naffects on the latency of your services.",
+          "title": "Availability Zones",
+          "warning": "Do not update this field after the cluster has been created, as it may\ncause issues with the cluster's networking configuration and may lead to a\ncomplete cluster rebuild."
         },
         "node_groups": {
           "additionalProperties": {
@@ -110,6 +125,7 @@
               "single_subnet": false
             }
           },
+          "description": "A mapping of node group names to their configurations. Each node group can\nbe configured with different instance types and scaling settings based on\nthe roles and demands of your applications.",
           "title": "Node Groups",
           "type": "object"
         },
@@ -126,6 +142,7 @@
             }
           ],
           "default": null,
+          "description": "A list of existing subnet IDs to use for the Amazon Web Services Kubernetes\ncluster. By default, Nebari will automatically set this field to `None`. For\nmore details on its implementation, see the `init.py:check_cloud_provider_region`\nfunction.",
           "title": "Existing Subnet Ids"
         },
         "existing_security_group_id": {
@@ -138,10 +155,12 @@
             }
           ],
           "default": null,
+          "description": "The ID of an existing security group to use for the Amazon Web Services\nKubernetes cluster. By default, Nebari will automatically set this field to\n`None`. For more details on its implementation, see the\n`init.py:check_cloud_provider_region` function.",
           "title": "Existing Security Group Id"
         },
         "vpc_cidr_block": {
           "default": "10.10.0.0/16",
+          "description": "The CIDR block to use for the Amazon Web Services Kubernetes cluster's VPC.\nBy default, Nebari will automatically set this field to `\"10.10.0.0/16\"`.\nFor\nmore details on its implementation, see the\n`init.py:check_cloud_provider_region`\nfunction.",
           "title": "Vpc Cidr Block",
           "type": "string"
         },
@@ -155,6 +174,7 @@
             }
           ],
           "default": null,
+          "description": "The ARN of the permissions boundary to use for the Amazon Web Services\nKubernetes cluster. By default, Nebari will automatically set this field to\n`None`. For more details on its implementation, see the\n`init.py:check_cloud_provider_region` function.",
           "title": "Permissions Boundary"
         },
         "tags": {
@@ -170,13 +190,12 @@
             }
           ],
           "default": {},
+          "description": "Tags to apply to the resources within the cluster. Tags can help you organize\nand manage your Amazon Web Services resources by grouping and filtering them\nbased on custom labels.",
           "title": "Tags"
         }
       },
       "required": [
-        "region",
-        "kubernetes_version",
-        "availability_zones"
+        "region"
       ],
       "title": "AmazonWebServicesProvider",
       "type": "object"
@@ -259,14 +278,17 @@
       "additionalProperties": false,
       "properties": {
         "instance": {
+          "description": "The instance type to use for nodes in this node group. Refer to the Microsoft\nAzure instance types documentation to choose an appropriate instance type based\non your needs.",
           "title": "Instance",
           "type": "string"
         },
         "min_nodes": {
+          "description": "The minimum number of nodes in this node group. This helps ensure that your\ncluster scales according to workload demands while maintaining a baseline\ncapacity.",
           "title": "Min Nodes",
           "type": "integer"
         },
         "max_nodes": {
+          "description": "The maximum number of nodes in this node group. This setting limits the\nscaling capability of your cluster to prevent over-provisioning of\nresources.",
           "title": "Max Nodes",
           "type": "integer"
         }
@@ -283,8 +305,11 @@
       "additionalProperties": false,
       "properties": {
         "region": {
+          "description": "The geographical region where your Microsoft Azure Kubernetes cluster will be\ndeployed. By default, during Nebari initialization, the region is\nautomatically set to the current value of `AZURE_DEFAULT_REGION` constant. For more\ndetails on its implementation, see the `init.py:check_cloud_provider_region` function.",
+          "note": "The available regions can be found at Microsoft Azure's [select a\nregion](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resources-portal#select-a-region) page.\nkeep in mind that changing regions may affect the latency of your services.",
           "title": "Region",
-          "type": "string"
+          "type": "string",
+          "warning": "In case of Nebari have been already deployed, if triggered, it will\nattempt to create a new cluster in the new region and conflicts may arise."
         },
         "kubernetes_version": {
           "anyOf": [
@@ -296,9 +321,11 @@
             }
           ],
           "default": null,
+          "description": "The specific version of Kubernetes to use for your cluster. Leaving this field\nas None will use the latest version supported by Microsoft Azure.\n\nBy default, Nebari will run a check during initiation for all the\navailable supported versions of kubernetes in the selected region and will\nuse the latest version available. General implementation details can be\nfound in the\n[initialize.py](https://github.com/nebari-dev/nebari/blob/develop/src/_nebari/initialize.py#L120-L133)\nfile.",
           "title": "Kubernetes Version"
         },
         "storage_account_postfix": {
+          "description": "The postfix to use for the storage account name. The storage account is used\nfor the Azure Disk and Azure File storage classes.",
           "title": "Storage Account Postfix",
           "type": "string"
         },
@@ -312,6 +339,7 @@
             }
           ],
           "default": null,
+          "description": "The name of the Azure Resource Group to use for the Kubernetes cluster. If not\nprovided, Nebari will automatically generate a name based on the project and\nnamespace.",
           "title": "Resource Group Name"
         },
         "node_groups": {
@@ -335,6 +363,7 @@
               "min_nodes": 0
             }
           },
+          "description": "A mapping of node group names to their configurations. Each node group can\nbe configured with different instance types and scaling settings based on\nthe roles and demands of your applications.",
           "title": "Node Groups",
           "type": "object"
         },
@@ -348,10 +377,12 @@
             }
           ],
           "default": null,
+          "description": "The ID of the subnet to use for the Kubernetes cluster. If not provided, Nebari\nwill automatically generate a subnet based on the project and namespace.",
           "title": "Vnet Subnet Id"
         },
         "private_cluster_enabled": {
           "default": false,
+          "description": "Determines whether to enable private cluster mode for the Kubernetes cluster.\nPrivate cluster mode restricts access to the cluster's API server to only\nprivate IP addresses.",
           "title": "Private Cluster Enabled",
           "type": "boolean"
         },
@@ -368,6 +399,7 @@
             }
           ],
           "default": {},
+          "description": "Tags to apply to the resources within the cluster. Tags can help you organize\nand manage your Azure resources by grouping and filtering them based on custom\nlabels.",
           "title": "Tags"
         },
         "network_profile": {
@@ -383,6 +415,7 @@
             }
           ],
           "default": null,
+          "description": "The network profile to use for the Kubernetes cluster. The network profile\ndetermines the network configuration for the cluster, including the maximum\nnumber of pods per node.",
           "title": "Network Profile"
         },
         "max_pods": {
@@ -395,6 +428,7 @@
             }
           ],
           "default": null,
+          "description": "The maximum number of pods per node to allow in the Kubernetes cluster. If not\nprovided, Nebari will automatically set this value based on the instance type\nof the node group.",
           "title": "Max Pods"
         }
       },
@@ -442,7 +476,7 @@
           },
           "description": "A list of scripts or commands that are executed prior to the main CI/CD\npipeline actions.\n\nThis can include setup scripts, pre-deployment checks, or any preparatory\ntasks that need to be completed before the main deployment process begins.\n\nIt expects a list of tasks to be rendered in the same syntax as a the\navailable CI/CD provider. Currently **only** supported on `gitlab-ci`\nworkflows.",
           "examples": [
-            "This might include installing dependencies, setting up\nenvironment variables, or running tests.\n\n```yaml\nbefore_script:\n    - name: Export Environment Variables\n      run: \"echo 'CREDENTIALS=${APPLICATION_CREDENTIALS}' >> $GITHUB_ENV\"\n```"
+            "This might include installing dependencies, setting up\nenvironment variables, or running tests. Bellow is an example of simple\n`ip` command execution:\n\n```yaml\nbefore_script:\n    - name: Check Network status\n      run: \"ip a\"\n```"
           ],
           "items": {
             "anyOf": [
@@ -464,7 +498,7 @@
           },
           "description": "A list of scripts or commands that are run after the main CI/CD pipeline\nactions have completed. This might include cleanup operations, notification\nsending, or other follow-up actions necessary to finalize the deployment\nprocess.\n\nIt expects a list of tasks to be rendered in the same syntax as a the\navailable CI/CD provider. Currently **only** supported on `gitlab-ci`\nworkflows.",
           "examples": [
-            "This might include sending notifications, cleaning up temporary\nfiles, or running post-deployment tests.\n\n```yaml\nafter_script:\n    - name: Send Notification\n      run: \"echo 'Deployment Complete!'\"\n```"
+            "This might include sending notifications, cleaning up temporary\nfiles, or running post-deployment tests. Bellow is a simple example of a\npost deployment notification:\n\n```yaml\nafter_script:\n    - name: Send Notification\n      run: \"echo 'Deployment Complete!'\"\n```"
           ],
           "items": {
             "anyOf": [
@@ -694,17 +728,20 @@
       "description": "Representation of a node group with Digital Ocean\n\n- Kubernetes limits: https://docs.digitalocean.com/products/kubernetes/details/limits/\n- Available instance types: https://slugs.do-api.dev/",
       "properties": {
         "instance": {
+          "description": "The instance type to use for nodes in this node group. Refer to the Digital\nOcean instance slugs documentation to choose an appropriate instance type\nbased on your needs.",
           "title": "Instance",
           "type": "string"
         },
         "min_nodes": {
           "default": 1,
+          "description": "The minimum number of nodes in this node group. This helps ensure that your\ncluster scales according to workload demands while maintaining a baseline\ncapacity.",
           "minimum": 1,
           "title": "Min Nodes",
           "type": "integer"
         },
         "max_nodes": {
           "default": 1,
+          "description": "The maximum number of nodes in this node group. This setting limits the\nscaling capability of your cluster to prevent over-provisioning of\nresources.",
           "minimum": 1,
           "title": "Max Nodes",
           "type": "integer"
@@ -720,8 +757,11 @@
       "additionalProperties": false,
       "properties": {
         "region": {
+          "description": "The geographical region where your Digital Ocean Kubernetes cluster will be\ndeployed. By default, during Nebari initialization, the region is\nautomatically set to the current value of `DO_DEFAULT_REGION` constant. For more\ndetails on its implementation, see the `init.py:check_cloud_provider_region` function.",
+          "note": "The available regions can be found at Digital Ocean's [select a\nregion](https://www.digitalocean.com/docs/kubernetes/how-to/create-cluster/#select-a-region) page.\nkeep in mind that changin regions may affect the latency of your services.",
           "title": "Region",
-          "type": "string"
+          "type": "string",
+          "warning": "In case of Nebari been already deployed, if triggered, nebari will\nattempt to create a new cluster in the new region and conflicts may arise."
         },
         "kubernetes_version": {
           "anyOf": [
@@ -733,6 +773,7 @@
             }
           ],
           "default": null,
+          "description": "The specific version of Kubernetes to use for your cluster. Leaving this field\nas None will use the latest version supported by Digital Ocean.\n\nBy default, Nebari will run a check during initiation for all the\navailable supported versions of kubernetes in the selected region and will\nuse the latest version available. General implementation details can be\nfound in the\n[initialize.py](https://github.com/nebari-dev/nebari/blob/develop/src/_nebari/initialize.py#L120-L133) file.",
           "title": "Kubernetes Version"
         },
         "node_groups": {
@@ -756,7 +797,7 @@
               "min_nodes": 1
             }
           },
-          "description": "Node groups to create in the cluster",
+          "description": "A mapping of node group names to their configurations. Each node group can\nbe configured with different instance types and scaling settings based on\nthe roles and demands of your applications.",
           "title": "Node Groups",
           "type": "object"
         },
@@ -773,6 +814,7 @@
             }
           ],
           "default": [],
+          "description": "Tags to apply to the resources within the cluster. Tags can help you organize\nand manage your Digital Ocean resources by grouping and filtering them based on\ncustom labels.",
           "title": "Tags"
         }
       },
@@ -931,10 +973,12 @@
       "additionalProperties": false,
       "properties": {
         "cidr_block": {
+          "description": "The IP address range to allow access to the Kubernetes cluster's API server.\nThe IP address range must be a valid CIDR block.",
           "title": "Cidr Block",
           "type": "string"
         },
         "display_name": {
+          "description": "The display name for the CIDR block. The display name is used to identify\nthe CIDR block in the Kubernetes cluster's master authorized networks\nconfiguration.",
           "title": "Display Name",
           "type": "string"
         }
@@ -951,11 +995,13 @@
       "description": "See general information regarding GPU support at:\n# TODO: replace with nebari.dev new URL\nhttps://docs.nebari.dev/en/stable/source/admin_guide/gpu.html?#add-gpu-node-group",
       "properties": {
         "name": {
+          "description": "The name of the accelerator to use for nodes in this node group. The name\nmust be a valid accelerator type supported by Google Cloud.",
           "title": "Name",
           "type": "string"
         },
         "count": {
           "default": 1,
+          "description": "The number of accelerators to attach to nodes in this node group. The count\nmust be a positive integer.",
           "minimum": 1,
           "title": "Count",
           "type": "integer"
@@ -971,18 +1017,22 @@
       "additionalProperties": false,
       "properties": {
         "cluster_secondary_range_name": {
+          "description": "The name of the secondary range to use for pods in the Kubernetes cluster. The\nsecondary range is used to assign IP addresses to pods running on the cluster's\nnodes.",
           "title": "Cluster Secondary Range Name",
           "type": "string"
         },
         "services_secondary_range_name": {
+          "description": "The name of the secondary range to use for services in the Kubernetes\ncluster.",
           "title": "Services Secondary Range Name",
           "type": "string"
         },
         "cluster_ipv4_cidr_block": {
+          "description": "The IP address range to use for pods in the Kubernetes cluster. The IP\naddress range is used to assign IP addresses to pods running on the\ncluster's nodes.",
           "title": "Cluster Ipv4 Cidr Block",
           "type": "string"
         },
         "services_ipv4_cidr_block": {
+          "description": "The IP address range to use for services in the Kubernetes cluster. The IP\naddress range is used to assign IP addresses to services running on the\ncluster. The IP address range must be a subset of the VPC network's IP\naddress range.",
           "title": "Services Ipv4 Cidr Block",
           "type": "string"
         }
@@ -1000,23 +1050,27 @@
       "additionalProperties": false,
       "properties": {
         "instance": {
+          "description": "The instance type to use for nodes in this node group. Refer to the Google\nCloud instance types documentation to choose an appropriate instance type\nbased on your needs.",
           "title": "Instance",
           "type": "string"
         },
         "min_nodes": {
           "default": 0,
+          "description": "The minimum number of nodes in this node group. This helps ensure that your\ncluster scales according to workload demands while maintaining a baseline\ncapacity.",
           "minimum": 0,
           "title": "Min Nodes",
           "type": "integer"
         },
         "max_nodes": {
           "default": 1,
+          "description": "The maximum number of nodes in this node group. This setting limits the\nscaling capability of your cluster to prevent over-provisioning of resources.",
           "minimum": 1,
           "title": "Max Nodes",
           "type": "integer"
         },
         "preemptible": {
           "default": false,
+          "description": "Determines whether to use preemptible VM instances for nodes in this node\ngroup. Preemptible VM instances are short-lived instances that are cheaper\nthan regular instances but can be terminated at any time.",
           "title": "Preemptible",
           "type": "boolean"
         },
@@ -1025,11 +1079,13 @@
             "type": "string"
           },
           "default": {},
+          "description": "A mapping of labels to apply to nodes in this node group. Labels can help\nyou organize and manage your Google Cloud resources by grouping and\nfiltering them based on custom labels.",
           "title": "Labels",
           "type": "object"
         },
         "guest_accelerators": {
           "default": [],
+          "description": "A list of guest accelerators to attach to nodes in this node group. Guest\naccelerators are specialized hardware devices that can be attached to nodes\nto improve performance for specific workloads.",
           "items": {
             "$ref": "#/$defs/GCPGuestAccelerator"
           },
@@ -1047,14 +1103,17 @@
       "additionalProperties": false,
       "properties": {
         "enable_private_endpoint": {
+          "description": "Determines whether to enable a private endpoint for the Kubernetes cluster's\nAPI server. A private endpoint restricts access to the API server to only\nprivate IP addresses.",
           "title": "Enable Private Endpoint",
           "type": "boolean"
         },
         "enable_private_nodes": {
+          "description": "Determines whether to enable private nodes for the Kubernetes cluster.\nPrivate nodes restrict access to the cluster's nodes to only private IP\naddresses.",
           "title": "Enable Private Nodes",
           "type": "boolean"
         },
         "master_ipv4_cidr_block": {
+          "description": "The IP address range to use for the Kubernetes cluster's master nodes. The\nIP address range is used to assign IP addresses to the cluster's master\nnodes. The IP address range must be a valid CIDR block.",
           "title": "Master Ipv4 Cidr Block",
           "type": "string"
         }
@@ -1104,14 +1163,20 @@
       "additionalProperties": false,
       "properties": {
         "region": {
+          "description": "The geographical region where your Google Cloud Kubernetes cluster will be\ndeployed. By default, during Nebari initialization, the region is\nautomatically set to the current value of `GCP_DEFAULT_REGION` constant. For more\ndetails on its implementation, see the `init.py:check_cloud_provider_region` function.",
+          "note": "The available regions can be found at Google Cloud's [select a\nregion](https://cloud.google.com/compute/docs/regions-zones) page.\nkeep in mind that changing regions may affect the latency of your services.",
           "title": "Region",
-          "type": "string"
+          "type": "string",
+          "warning": "In case of Nebari have been already deployed, if triggered, it will\nattempt to create a new cluster in the new region and conflicts may arise."
         },
         "project": {
+          "description": "The name of the Google Cloud project to use for the Kubernetes cluster. The\nproject is used to group and manage resources within Google Cloud.",
           "title": "Project",
           "type": "string"
         },
         "kubernetes_version": {
+          "default": null,
+          "description": "The specific version of Kubernetes to use for your cluster. Leaving this field\nas None will use the latest version supported by Google Cloud.\n\nBy default, Nebari will run a check during initiation for all the\navailable supported versions of kubernetes in the selected region and will\nuse the latest version available. General implementation details can be\nfound in the\n[initialize.py]",
           "title": "Kubernetes Version",
           "type": "string"
         },
@@ -1128,10 +1193,12 @@
             }
           ],
           "default": [],
+          "description": "The availability zones to use for the Kubernetes cluster. Availability zones\nare distinct locations within a region that are isolated from each other to\nprotect against failures in one zone affecting the others.",
           "title": "Availability Zones"
         },
         "release_channel": {
           "default": "UNSPECIFIED",
+          "description": "The release channel to use for the Kubernetes cluster. The release channel\ndetermines how quickly new versions of Kubernetes are made available to your\ncluster.",
           "title": "Release Channel",
           "type": "string"
         },
@@ -1165,6 +1232,7 @@
               "preemptible": false
             }
           },
+          "description": "A mapping of node group names to their configurations. Each node group can\nbe configured with different instance types and scaling settings based on\nthe roles and demands of your applications.",
           "title": "Node Groups",
           "type": "object"
         },
@@ -1181,15 +1249,18 @@
             }
           ],
           "default": [],
+          "description": "Tags to apply to the resources within the cluster. Tags can help you organize\nand manage your Google Cloud resources by grouping and filtering them based on\ncustom labels.",
           "title": "Tags"
         },
         "networking_mode": {
           "default": "ROUTE",
+          "description": "The networking mode to use for the Kubernetes cluster. The networking mode\ndetermines how the cluster's nodes communicate with each other and with the\noutside world.",
           "title": "Networking Mode",
           "type": "string"
         },
         "network": {
           "default": "default",
+          "description": "The name of the network to use for the Kubernetes cluster. The network is used\nto define the IP address range and subnetworks that the cluster's nodes will use.",
           "title": "Network",
           "type": "string"
         },
@@ -1203,6 +1274,7 @@
             }
           ],
           "default": null,
+          "description": "The name of the subnetwork to use for the Kubernetes cluster. The subnetwork is\nused to define the IP address range and routing rules for the cluster's nodes.",
           "title": "Subnetwork"
         },
         "ip_allocation_policy": {
@@ -1214,7 +1286,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "The IP allocation policy to use for the Kubernetes cluster. The IP allocation\npolicy determines how IP addresses are assigned to the cluster's nodes and pods."
         },
         "master_authorized_networks_config": {
           "anyOf": [
@@ -1225,7 +1298,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "The master authorized networks configuration to use for the Kubernetes cluster.\nThe master authorized networks configuration determines which IP addresses are\nallowed to access the cluster's API server."
         },
         "private_cluster_config": {
           "anyOf": [
@@ -1236,13 +1310,13 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "The private cluster configuration to use for the Kubernetes cluster. The private\ncluster configuration determines whether the cluster's nodes and API server are\naccessible only through private IP addresses."
         }
       },
       "required": [
         "region",
-        "project",
-        "kubernetes_version"
+        "project"
       ],
       "title": "GoogleCloudPlatformProvider",
       "type": "object"
@@ -2012,7 +2086,7 @@
             }
           ],
           "default": {
-            "initial_root_password": "l0z6su3pywmsdw27",
+            "initial_root_password": "rekzmzvunkqvpsuz",
             "overrides": {},
             "realm_display_name": "Nebari"
           }
@@ -2084,16 +2158,23 @@
             }
           ],
           "default": null,
+          "depends_ond": {
+            "type": "existing"
+          },
           "description": "Specifies the Terraform backend to manage state data, applicable **only**\nwhen using the `existing` state type.\n\nA backend determines the storage location for Terraform's state files, which\ntrack managed resources. Nebari handles this automatically for the `remote`\nstate type, but for `existing` state types, you must provide the backend\nconfiguration manually.",
+          "note": "For a full overview of Terraform's supported backends and their\nconfiguration, visit the [Terraform Backends documentation](https://developer.hashicorp.com/terraform/language/settings/backends/configuration).",
           "title": "Backend"
         },
         "config": {
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Configuration for the Terraform backend, only supported if using\nwith the existing terraform state type. For a complete list of\nsupported backends and their configuration options, see the [Terraform\nBackednds](https://developer.hashicorp.com/terraform/language/settings/backends/configuration#available-backends)\ndocumentation.",
+          "depends_on": {
+            "type": "existing"
+          },
+          "description": "Configuration for the Terraform backend, only supported if using\nwith the existing terraform state type. For a complete list of\nsupported backends and their configuration options, see the [Terraform\nBackednds](https://developer.hashicorp.com/terraform/language/settings/backends/configuration#available-backends)\ndocumentation.\n```",
           "examples": [
-            "Bellow is an example of the configuration for the Terraform backend\nwhen using an existing state backend from a supported provider. In this\nexample, we've configured the backend to use the [Kubernetes secret\nbackend](https://developer.hashicorp.com/terraform/language/settings/backends/kubernetes)\nwith the following configuration options:\n\n```yaml\nconfig:\n    secret_suffix: my-secret-suffix\n    labels:\n        my-label: my-value\n    namespace: my-namespace\n    in_cluster_config: true\n```"
+            "Bellow is an example of the configuration for the Terraform backend\nwhen using an existing state backend from a supported provider. In this\nexample, we've configured the backend to use the [Kubernetes secret\nbackend](https://developer.hashicorp.com/terraform/language/settings/backends/kubernetes)\nwith the following configuration options:\n\n```yaml\nbackend: kubernetes\nconfig:\n    secret_suffix: my-secret-suffix\n    labels:\n        my-label: my-value\n    namespace: my-namespace\n    in_cluster_config: true\n```"
           ],
           "title": "Config",
           "type": "object"
@@ -2457,7 +2538,7 @@
           "type": "password"
         },
         "keycloak": {
-          "initial_root_password": "l0z6su3pywmsdw27",
+          "initial_root_password": "rekzmzvunkqvpsuz",
           "overrides": {},
           "realm_display_name": "Nebari"
         },
@@ -2537,6 +2618,9 @@
         "provider": "local"
       },
       "description": "Local deployment is intended for Nebari deployments on a `local` cluster\ncreated and management by [Kind](https://kind.sigs.k8s.io/). It is great for experimentation and\ndevelopment.",
+      "examples": [
+        "Bellow is a full example of how the defaults values are set for the\nlocal provider:\n```yaml\nlocal:\n    kube_context: test-cluster\n    node_selectors:\n        general:\n            key: \"kubernetes.io/os\"\n            value: \"linux\"\n        user:\n            key: \"kubernetes.io/os\"\n            value: \"linux\"\n        worker:\n            key: \"kubernetes.io/os\"\n            value: \"linux\"\n```"
+      ],
       "warning": "Support for local deployments have only been fully tested on Linux based\nsystems. MacOS support is currently experimental."
     },
     "existing": {
@@ -2552,6 +2636,12 @@
         "provider": "existing"
       },
       "description": "Originally designed for Nebari deployments on `local` clusters, this feature\nhas since expanded to allow users to deploy Nebari to any\nexisting kubernetes cluster. This is useful for deploying Nebari to\nmore controlled environments where cluster management is already in place.",
+      "examples": {
+        "AWS": "Below is an example of how to set the `kube_context` field in the\nevent that you need to specify the correct cluster, when deploying into\nan existing AWS infrastructure:\n```yaml\nexisting:\n    kube_context: arn:aws:eks:<region>:xxxxxxxxxxxx:cluster/\n    node_selectors:\n        general:\n            key: \"eks.amazonaws.com/nodegroup\"\n            value: \"general\"\n        user:\n            key: \"eks.amazonaws.com/nodegroup\"\n            value: \"user\"\n        worker:\n            key: \"eks.amazonaws.com/nodegroup\"\n            value: \"worker\"\n    ```",
+        "Azure": "Below is an example of how to set the `kube_context` field in the\nevent that you need to specify the correct cluster, when deploying into\nan existing Azure infrastructure:\n```yaml\nexisting:\n    kube_context: <cluster_name>\n    node_selectors:\n        general:\n            key: \"kubernetes.azure.com/agentpool\"\n            value: \"general\"\n        user:\n            key: \"kubernetes.azure.com/agentpool\"\n            value: \"user\"\n        worker:\n            key: \"kubernetes.azure.com/agentpool\"\n            value: \"worker\"\n```",
+        "DO": "Below is an example of how to set the `kube_context` field in the\nevent that you need to specify the correct cluster, when deploying into\nan existing Digital Ocean infrastructure:\n```yaml\nexisting:\n    kube_context: <cluster_name>\n    node_selectors:\n        general:\n            key: \"doks.digitalocean.com/node-pool\"\n            value: \"general\"\n        user:\n            key: \"doks.digitalocean.com/node-pool\"\n            value: \"user\"\n        worker:\n            key: \"doks.digitalocean.com/node-pool\"\n            value: \"worker\"\n```",
+        "GCP": "Below is an example of how to set the `kube_context` field in the\nevent that you need to specify the correct cluster, when deploying into\nan existing GCP infrastructure:\n```yaml\nexisting:\n    kube_context: gke_<project_id>_<region>_<cluster_name>\n    node_selectors:\n        general:\n            key: \"cloud.google.com/gke-nodepool\"\n            value: \"general\"\n        user:\n            key: \"cloud.google.com/gke-nodepool\"\n            value: \"user\"\n        worker:\n            key: \"cloud.google.com/gke-nodepool\"\n            value: \"worker\"\n```"
+      },
       "note": "By default, Nebari will render the deployment mode similar to how `local`\nworks. Which means that, without extra configuration, the deployment of the\ncluster infrastructure will assume the presence a local cluster, already\ncreated by tools like k3s, Kind or MiniKube, and the default settings for\nboth `kube_context` and `node_selector` will be used."
     },
     "google_cloud_platform": {
@@ -2566,7 +2656,10 @@
       "depends_on": {
         "provider": "gcp"
       },
-      "description": "The Google Cloud Platform provider is tailored for deploying Nebari on GCP's\nrobust, secure, and scalable infrastructure. It enables seamless integration\nwith GCP services like Google Kubernetes Engine (GKE), ensuring optimized\nperformance and management for enterprise-grade applications."
+      "description": "The Google Cloud Platform provider is tailored for deploying Nebari on GCP's\nrobust, secure, and scalable infrastructure. It enables seamless integration\nwith GCP services like Google Kubernetes Engine (GKE), ensuring optimized\nperformance and management for enterprise-grade applications.",
+      "examples": [
+        "Below is a full example of how the defaults values are set for the\nGoogle Cloud Platform provider:\n```yaml\ngoogle_cloud_platform:\n    region: us-central1\n    project: my-project\n    kubernetes_version: 1.21.4-gke.2300\n    availability_zones:\n        - us-central1-a\n        - us-central1-b\n    node_groups:\n        general:\n            instance: n1-standard-4\n            min_nodes: 1\n            max_nodes: 1\n        user:\n            instance: n1-standard-4\n            min_nodes: 0\n            max_nodes: 5\n        worker:\n            instance: n1-standard-4\n            min_nodes: 0\n            max_nodes: 5\n```"
+      ]
     },
     "amazon_web_services": {
       "anyOf": [
@@ -2580,7 +2673,10 @@
       "depends_on": {
         "provider": "aws"
       },
-      "description": "This provider facilitates Nebari deployments on Amazon Web Services, leveraging\nAWS's extensive cloud capabilities. It's ideal for users looking to integrate\nwith AWS's managed Kubernetes service, EKS, and utilize AWS's wide range of\ncloud solutions for enhanced scalability and reliability."
+      "description": "This provider facilitates Nebari deployments on [Amazon Web Services (AWS)](https://aws.amazon.com/eks/), leveraging\nAWS's extensive cloud capabilities.",
+      "examples": [
+        "Below is a full example of how the defaults values are set for the\nAWS provider:\n```yaml\namazon_web_services:\n    region: us-west-2\n    kubernetes_version: 1.21\n    availability_zones:\n        - us-west-2a\n        - us-west-2b\n    node_groups:\n        general:\n            instance: m5.2xlarge\n            min_nodes: 1\n            max_nodes: 1\n        user:\n            instance: m5.xlarge\n            min_nodes: 0\n            max_nodes: 5\n        worker:\n            instance: m5.xlarge\n            min_nodes: 0\n            max_nodes: 5\n```"
+      ]
     },
     "azure": {
       "anyOf": [
@@ -2594,7 +2690,10 @@
       "depends_on": {
         "provider": "azure"
       },
-      "description": "Azure provider supports deploying Nebari on Microsoft Azure's cloud\nplatform, using Azure Kubernetes Service (AKS). This provider is perfect for\nenterprises that require integration with Microsoft's cloud ecosystem and\nwant to benefit from Azure's enterprise-focused services and security\nfeatures."
+      "description": "Azure provider supports deploying Nebari on Microsoft Azure's cloud\nplatform, using Azure Kubernetes Service (AKS). This provider is perfect for\nenterprises that require integration with Microsoft's cloud ecosystem and\nwant to benefit from Azure's enterprise-focused services and security\nfeatures.",
+      "examples": [
+        "Below is a full example of how the defaults values are set for the\nAzure provider:\n```yaml\nazure:\n    region: eastus\n    kubernetes_version: 1.21.4\n    resource_group_name: my-resource-group\n    vnet_subnet_id: my-vnet-subnet-id\n    private_cluster_enabled: false\n    tags:\n        my-tag-key: my-tag-value\n    node_groups:\n        general:\n            instance: Standard_D4_v4\n            min_nodes: 1\n            max_nodes: 1\n        user:\n            instance: Standard_D4_v4\n            min_nodes: 0\n            max_nodes: 5\n        worker:\n            instance: Standard_D4_v4\n            min_nodes: 0\n            max_nodes: 5\n```"
+      ]
     },
     "digital_ocean": {
       "anyOf": [
@@ -2608,7 +2707,11 @@
       "depends_on": {
         "provider": "do"
       },
-      "description": "Designed for Nebari deployments on Digital Ocean, this provider simplifies\nthe process of managing Kubernetes clusters through Digital Ocean Kubernetes\n(DOKS) and their on deman machines, called Droplets.\n\nIt's a great choice for users looking to deploy applications on a cloud\nplatform that's easy to use, while offering a wide range of services and\nintegrations."
+      "description": "Designed for Nebari deployments on Digital Ocean, this provider simplifies\nthe process of managing Kubernetes clusters through Digital Ocean Kubernetes\n(DOKS) and their on demand machines, called Droplets.\n\nIt's a great choice for users looking to deploy applications on a cloud\nplatform that's easy to use, while offering a wide range of services and\nintegrations.",
+      "examples": [
+        "Below is a full example of how the defaults values are set for the\nDigital Ocean provider:\n```yaml\ndigital_ocean:\n    region: nyc1\n    kubernetes_version: 1.21.4-do.0\n    node_groups:\n        general:\n            instance: s-4vcpu-8gb\n            min_nodes: 1\n            max_nodes: 1\n        user:\n            instance: s-4vcpu-8gb\n            min_nodes: 0\n            max_nodes: 5\n        worker:\n            instance: s-4vcpu-8gb\n            min_nodes: 0\n            max_nodes: 5\n```"
+      ],
+      "note": "By default, Nebari will render and apply the default values during its first\ninitialization and deployment. For extra details about how these values are\nassigned, please refer to the\n[initialize.py](https://github.com/nebari-dev/nebari/blob/develop/src/_nebari/initialize.py#L120-L133)\nfile."
     },
     "terraform_state": {
       "allOf": [
@@ -2642,6 +2745,7 @@
     "namespace": {
       "default": "dev",
       "description": "Used in combination with `project_name` to label infrastructure related\nresources on Nebari and also determines the target\n[namespace](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)\nused when deploying kubernetes resources. Defaults to `dev`.",
+      "note": "On cloud deployments, the `namespace` field is also used to generate the\nkubernetes cluster name once fully deployed. Following the format of `<project_name>-<namespace>`.",
       "pattern": "^[A-Za-z][A-Za-z\\-_]*[A-Za-z]$",
       "title": "Namespace",
       "type": "string"
@@ -2667,12 +2771,13 @@
     "nebari_version": {
       "default": "2024.4.2.dev21+gd7b7bad2.d20240530",
       "description": "The current installed version of Nebari. This is used to determine if the\nschema's version, the user must run `nebari upgrade` to ensure\ncompatibility.",
+      "note": "If Nebari has being installed in a development environment, such as `pip\ninstall -e`, the version will receive a `.dev` suffix based on the current\ncommit hash. For example, `2024.4.2.dev21+gd7b7bad2.d20220401`.",
       "title": "Nebari Version",
       "type": "string"
     },
     "prevent_deploy": {
       "default": false,
-      "description": "Controls whether deployment is blocked post-upgrade. Setting this field to\n'True' helps ensure that users do not inadvertently redeploy without being\naware of necessary configurations and updates, thus safeguarding the\nstability and integrity of the deployment.",
+      "description": "Controls whether deployment is blocked post-upgrade. Setting this field to\n`True` helps ensure that users do not inadvertently redeploy without being\naware of necessary configurations and updates, thus safeguarding the\nstability and integrity of the deployment.",
       "title": "Prevent Deploy",
       "type": "boolean"
     }

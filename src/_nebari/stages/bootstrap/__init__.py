@@ -126,12 +126,13 @@ class CICD(schema.Base):
             cleandoc(
                 """
                 This might include installing dependencies, setting up
-                environment variables, or running tests.
+                environment variables, or running tests. Bellow is an example of simple
+                `ip` command execution:
 
                 ```yaml
                 before_script:
-                    - name: Export Environment Variables
-                      run: "echo 'CREDENTIALS=${APPLICATION_CREDENTIALS}' >> $GITHUB_ENV"
+                    - name: Check Network status
+                      run: "ip a"
                 ```
                 """
             )
@@ -156,7 +157,8 @@ class CICD(schema.Base):
             cleandoc(
                 """
                 This might include sending notifications, cleaning up temporary
-                files, or running post-deployment tests.
+                files, or running post-deployment tests. Bellow is a simple example of a
+                post deployment notification:
 
                 ```yaml
                 after_script:

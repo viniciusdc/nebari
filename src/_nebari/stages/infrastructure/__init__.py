@@ -218,9 +218,36 @@ class DigitalOceanNodeGroup(schema.Base):
     - Available instance types: https://slugs.do-api.dev/
     """
 
-    instance: str
-    min_nodes: Annotated[int, Field(ge=1)] = 1
-    max_nodes: Annotated[int, Field(ge=1)] = 1
+    instance: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The instance type to use for nodes in this node group. Refer to the Digital
+            Ocean instance slugs documentation to choose an appropriate instance type
+            based on your needs.
+            """
+        ),
+    )
+    min_nodes: Annotated[int, Field(ge=1)] = Field(
+        default=1,
+        description=cleandoc(
+            """
+            The minimum number of nodes in this node group. This helps ensure that your
+            cluster scales according to workload demands while maintaining a baseline
+            capacity.
+            """
+        ),
+    )
+    max_nodes: Annotated[int, Field(ge=1)] = Field(
+        default=1,
+        description=cleandoc(
+            """
+            The maximum number of nodes in this node group. This setting limits the
+            scaling capability of your cluster to prevent over-provisioning of
+            resources.
+            """
+        ),
+    )
 
 
 DEFAULT_DO_NODE_GROUPS = {
@@ -231,14 +258,64 @@ DEFAULT_DO_NODE_GROUPS = {
 
 
 class DigitalOceanProvider(schema.Base):
-    region: str
-    kubernetes_version: Optional[str] = None
-    # Digital Ocean image slugs are listed here https://slugs.do-api.dev/
+    region: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The geographical region where your Digital Ocean Kubernetes cluster will be
+            deployed. By default, during Nebari initialization, the region is
+            automatically set to the current value of `DO_DEFAULT_REGION` constant. For more
+            details on its implementation, see the `init.py:check_cloud_provider_region` function.
+            """
+        ),
+        note=cleandoc(
+            """
+            The available regions can be found at Digital Ocean's [select a
+            region](https://www.digitalocean.com/docs/kubernetes/how-to/create-cluster/#select-a-region) page.
+            keep in mind that changin regions may affect the latency of your services.
+            """
+        ),
+        warning=cleandoc(
+            """In case of Nebari been already deployed, if triggered, nebari will
+            attempt to create a new cluster in the new region and conflicts may arise.
+            """
+        ),
+    )
+    kubernetes_version: Optional[str] = Field(
+        None,
+        description=cleandoc(
+            """
+            The specific version of Kubernetes to use for your cluster. Leaving this field
+            as None will use the latest version supported by Digital Ocean.
+
+            By default, Nebari will run a check during initiation for all the
+            available supported versions of kubernetes in the selected region and will
+            use the latest version available. General implementation details can be
+            found in the
+            [initialize.py](https://github.com/nebari-dev/nebari/blob/develop/src/_nebari/initialize.py#L120-L133) file.
+            """
+        ),
+    )
     node_groups: Dict[str, DigitalOceanNodeGroup] = Field(
         default=DEFAULT_DO_NODE_GROUPS,
-        description="Node groups to create in the cluster",
+        description=cleandoc(
+            f"""
+            A mapping of node group names to their configurations. Each node group can
+            be configured with different instance types and scaling settings based on
+            the roles and demands of your applications.
+            """
+        ),
     )
-    tags: Optional[List[str]] = []
+    tags: Optional[List[str]] = Field(
+        default=[],
+        description=cleandoc(
+            """
+            Tags to apply to the resources within the cluster. Tags can help you organize
+            and manage your Digital Ocean resources by grouping and filtering them based on
+            custom labels.
+            """
+        ),
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -276,25 +353,113 @@ class DigitalOceanProvider(schema.Base):
 
 
 class GCPIPAllocationPolicy(schema.Base):
-    cluster_secondary_range_name: str
-    services_secondary_range_name: str
-    cluster_ipv4_cidr_block: str
-    services_ipv4_cidr_block: str
+    cluster_secondary_range_name: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The name of the secondary range to use for pods in the Kubernetes cluster. The
+            secondary range is used to assign IP addresses to pods running on the cluster's
+            nodes.
+            """
+        ),
+    )
+    services_secondary_range_name: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The name of the secondary range to use for services in the Kubernetes
+            cluster.
+            """
+        ),
+    )
+    cluster_ipv4_cidr_block: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The IP address range to use for pods in the Kubernetes cluster. The IP
+            address range is used to assign IP addresses to pods running on the
+            cluster's nodes.
+            """
+        ),
+    )
+    services_ipv4_cidr_block: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The IP address range to use for services in the Kubernetes cluster. The IP
+            address range is used to assign IP addresses to services running on the
+            cluster. The IP address range must be a subset of the VPC network's IP
+            address range.
+            """
+        ),
+    )
 
 
 class GCPCIDRBlock(schema.Base):
-    cidr_block: str
-    display_name: str
+    cidr_block: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The IP address range to allow access to the Kubernetes cluster's API server.
+            The IP address range must be a valid CIDR block.
+            """
+        ),
+    )
+    display_name: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The display name for the CIDR block. The display name is used to identify
+            the CIDR block in the Kubernetes cluster's master authorized networks
+            configuration.
+            """
+        ),
+    )
 
 
 class GCPMasterAuthorizedNetworksConfig(schema.Base):
-    cidr_blocks: List[GCPCIDRBlock]
+    cidr_blocks: List[GCPCIDRBlock] = Field(
+        ...,
+        description=cleandoc(
+            """
+            The list of CIDR blocks to allow access to the Kubernetes cluster's API
+            server. Each CIDR block must be a valid CIDR block.
+            """
+        ),
+    )
 
 
 class GCPPrivateClusterConfig(schema.Base):
-    enable_private_endpoint: bool
-    enable_private_nodes: bool
-    master_ipv4_cidr_block: str
+    enable_private_endpoint: bool = Field(
+        ...,
+        description=cleandoc(
+            """
+            Determines whether to enable a private endpoint for the Kubernetes cluster's
+            API server. A private endpoint restricts access to the API server to only
+            private IP addresses.
+            """
+        ),
+    )
+    enable_private_nodes: bool = Field(
+        ...,
+        description=cleandoc(
+            """
+            Determines whether to enable private nodes for the Kubernetes cluster.
+            Private nodes restrict access to the cluster's nodes to only private IP
+            addresses.
+            """
+        ),
+    )
+    master_ipv4_cidr_block: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The IP address range to use for the Kubernetes cluster's master nodes. The
+            IP address range is used to assign IP addresses to the cluster's master
+            nodes. The IP address range must be a valid CIDR block.
+            """
+        ),
+    )
 
 
 class GCPGuestAccelerator(schema.Base):
@@ -304,17 +469,86 @@ class GCPGuestAccelerator(schema.Base):
     https://docs.nebari.dev/en/stable/source/admin_guide/gpu.html?#add-gpu-node-group
     """
 
-    name: str
-    count: Annotated[int, Field(ge=1)] = 1
+    name: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The name of the accelerator to use for nodes in this node group. The name
+            must be a valid accelerator type supported by Google Cloud.
+            """
+        ),
+    )
+    count: Annotated[int, Field(ge=1)] = Field(
+        1,
+        description=cleandoc(
+            """
+            The number of accelerators to attach to nodes in this node group. The count
+            must be a positive integer.
+            """
+        ),
+    )
 
 
 class GCPNodeGroup(schema.Base):
-    instance: str
-    min_nodes: Annotated[int, Field(ge=0)] = 0
-    max_nodes: Annotated[int, Field(ge=1)] = 1
-    preemptible: bool = False
-    labels: Dict[str, str] = {}
-    guest_accelerators: List[GCPGuestAccelerator] = []
+    instance: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The instance type to use for nodes in this node group. Refer to the Google
+            Cloud instance types documentation to choose an appropriate instance type
+            based on your needs.
+            """
+        ),
+    )
+    min_nodes: Annotated[int, Field(ge=0)] = Field(
+        0,
+        description=cleandoc(
+            """
+            The minimum number of nodes in this node group. This helps ensure that your
+            cluster scales according to workload demands while maintaining a baseline
+            capacity.
+            """
+        ),
+    )
+    max_nodes: Annotated[int, Field(ge=1)] = Field(
+        1,
+        description=cleandoc(
+            """
+            The maximum number of nodes in this node group. This setting limits the
+            scaling capability of your cluster to prevent over-provisioning of resources.
+            """
+        ),
+    )
+    preemptible: bool = Field(
+        False,
+        description=cleandoc(
+            """
+            Determines whether to use preemptible VM instances for nodes in this node
+            group. Preemptible VM instances are short-lived instances that are cheaper
+            than regular instances but can be terminated at any time.
+            """
+        ),
+    )
+    labels: Dict[str, str] = Field(
+        {},
+        description=cleandoc(
+            """
+            A mapping of labels to apply to nodes in this node group. Labels can help
+            you organize and manage your Google Cloud resources by grouping and
+            filtering them based on custom labels.
+            """
+        ),
+    )
+    guest_accelerators: List[GCPGuestAccelerator] = Field(
+        [],
+        description=cleandoc(
+            """
+            A list of guest accelerators to attach to nodes in this node group. Guest
+            accelerators are specialized hardware devices that can be attached to nodes
+            to improve performance for specific workloads.
+            """
+        ),
+    )
 
 
 DEFAULT_GCP_NODE_GROUPS = {
@@ -325,19 +559,150 @@ DEFAULT_GCP_NODE_GROUPS = {
 
 
 class GoogleCloudPlatformProvider(schema.Base):
-    region: str
-    project: str
-    kubernetes_version: str
-    availability_zones: Optional[List[str]] = []
-    release_channel: str = constants.DEFAULT_GKE_RELEASE_CHANNEL
-    node_groups: Dict[str, GCPNodeGroup] = DEFAULT_GCP_NODE_GROUPS
-    tags: Optional[List[str]] = []
-    networking_mode: str = "ROUTE"
-    network: str = "default"
-    subnetwork: Optional[Union[str, None]] = None
-    ip_allocation_policy: Optional[Union[GCPIPAllocationPolicy, None]] = None
-    master_authorized_networks_config: Optional[Union[GCPCIDRBlock, None]] = None
-    private_cluster_config: Optional[Union[GCPPrivateClusterConfig, None]] = None
+    region: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The geographical region where your Google Cloud Kubernetes cluster will be
+            deployed. By default, during Nebari initialization, the region is
+            automatically set to the current value of `GCP_DEFAULT_REGION` constant. For more
+            details on its implementation, see the `init.py:check_cloud_provider_region` function.
+            """
+        ),
+        note=cleandoc(
+            """
+            The available regions can be found at Google Cloud's [select a
+            region](https://cloud.google.com/compute/docs/regions-zones) page.
+            keep in mind that changing regions may affect the latency of your services.
+            """
+        ),
+        warning=cleandoc(
+            """In case of Nebari have been already deployed, if triggered, it will
+            attempt to create a new cluster in the new region and conflicts may arise.
+            """
+        ),
+    )
+    project: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The name of the Google Cloud project to use for the Kubernetes cluster. The
+            project is used to group and manage resources within Google Cloud.
+            """
+        ),
+    )
+    kubernetes_version: str = Field(
+        None,
+        description=cleandoc(
+            """
+            The specific version of Kubernetes to use for your cluster. Leaving this field
+            as None will use the latest version supported by Google Cloud.
+
+            By default, Nebari will run a check during initiation for all the
+            available supported versions of kubernetes in the selected region and will
+            use the latest version available. General implementation details can be
+            found in the
+            [initialize.py]
+            """
+        ),
+    )
+    availability_zones: Optional[List[str]] = Field(
+        [],
+        description=cleandoc(
+            """
+            The availability zones to use for the Kubernetes cluster. Availability zones
+            are distinct locations within a region that are isolated from each other to
+            protect against failures in one zone affecting the others.
+            """
+        ),
+    )
+    release_channel: str = Field(
+        constants.DEFAULT_GKE_RELEASE_CHANNEL,
+        description=cleandoc(
+            """
+            The release channel to use for the Kubernetes cluster. The release channel
+            determines how quickly new versions of Kubernetes are made available to your
+            cluster.
+            """
+        ),
+    )
+    node_groups: Dict[str, GCPNodeGroup] = Field(
+        DEFAULT_GCP_NODE_GROUPS,
+        description=cleandoc(
+            """
+            A mapping of node group names to their configurations. Each node group can
+            be configured with different instance types and scaling settings based on
+            the roles and demands of your applications.
+            """
+        ),
+    )
+    tags: Optional[List[str]] = Field(
+        [],
+        description=cleandoc(
+            """
+            Tags to apply to the resources within the cluster. Tags can help you organize
+            and manage your Google Cloud resources by grouping and filtering them based on
+            custom labels.
+            """
+        ),
+    )
+    networking_mode: str = Field(
+        "ROUTE",
+        description=cleandoc(
+            """
+            The networking mode to use for the Kubernetes cluster. The networking mode
+            determines how the cluster's nodes communicate with each other and with the
+            outside world.
+            """
+        ),
+    )
+    network: str = Field(
+        "default",
+        description=cleandoc(
+            """
+            The name of the network to use for the Kubernetes cluster. The network is used
+            to define the IP address range and subnetworks that the cluster's nodes will use.
+            """
+        ),
+    )
+    subnetwork: Optional[Union[str, None]] = Field(
+        None,
+        description=cleandoc(
+            """
+            The name of the subnetwork to use for the Kubernetes cluster. The subnetwork is
+            used to define the IP address range and routing rules for the cluster's nodes.
+            """
+        ),
+    )
+    ip_allocation_policy: Optional[Union[GCPIPAllocationPolicy, None]] = Field(
+        None,
+        description=cleandoc(
+            """
+            The IP allocation policy to use for the Kubernetes cluster. The IP allocation
+            policy determines how IP addresses are assigned to the cluster's nodes and pods.
+            """
+        ),
+    )
+    master_authorized_networks_config: Optional[Union[GCPCIDRBlock, None]] = Field(
+        None,
+        description=cleandoc(
+            """
+            The master authorized networks configuration to use for the Kubernetes cluster.
+            The master authorized networks configuration determines which IP addresses are
+            allowed to access the cluster's API server.
+            """
+        ),
+    )
+    private_cluster_config: Optional[Union[GCPPrivateClusterConfig, None]] = Field(
+        None,
+        description=cleandoc(
+            """
+            The private cluster configuration to use for the Kubernetes cluster. The private
+            cluster configuration determines whether the cluster's nodes and API server are
+            accessible only through private IP addresses.
+            """
+        ),
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -359,9 +724,36 @@ class GoogleCloudPlatformProvider(schema.Base):
 
 
 class AzureNodeGroup(schema.Base):
-    instance: str
-    min_nodes: int
-    max_nodes: int
+    instance: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The instance type to use for nodes in this node group. Refer to the Microsoft
+            Azure instance types documentation to choose an appropriate instance type based
+            on your needs.
+            """
+        ),
+    )
+    min_nodes: int = Field(
+        ...,
+        description=cleandoc(
+            """
+            The minimum number of nodes in this node group. This helps ensure that your
+            cluster scales according to workload demands while maintaining a baseline
+            capacity.
+            """
+        ),
+    )
+    max_nodes: int = Field(
+        ...,
+        description=cleandoc(
+            """
+            The maximum number of nodes in this node group. This setting limits the
+            scaling capability of your cluster to prevent over-provisioning of
+            resources.
+            """
+        ),
+    )
 
 
 DEFAULT_AZURE_NODE_GROUPS = {
@@ -372,18 +764,142 @@ DEFAULT_AZURE_NODE_GROUPS = {
 
 
 class AzureProvider(schema.Base):
-    region: str
-    kubernetes_version: Optional[str] = None
-    storage_account_postfix: str
-    resource_group_name: Optional[str] = None
-    node_groups: Dict[str, AzureNodeGroup] = DEFAULT_AZURE_NODE_GROUPS
-    storage_account_postfix: str
-    vnet_subnet_id: Optional[str] = None
-    private_cluster_enabled: bool = False
-    resource_group_name: Optional[str] = None
-    tags: Optional[Dict[str, str]] = {}
-    network_profile: Optional[Dict[str, str]] = None
-    max_pods: Optional[int] = None
+    region: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The geographical region where your Microsoft Azure Kubernetes cluster will be
+            deployed. By default, during Nebari initialization, the region is
+            automatically set to the current value of `AZURE_DEFAULT_REGION` constant. For more
+            details on its implementation, see the `init.py:check_cloud_provider_region` function.
+            """
+        ),
+        note=cleandoc(
+            """
+            The available regions can be found at Microsoft Azure's [select a
+            region](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resources-portal#select-a-region) page.
+            keep in mind that changing regions may affect the latency of your services.
+            """
+        ),
+        warning=cleandoc(
+            """In case of Nebari have been already deployed, if triggered, it will
+            attempt to create a new cluster in the new region and conflicts may arise.
+            """
+        ),
+    )
+    kubernetes_version: Optional[str] = Field(
+        None,
+        description=cleandoc(
+            """
+            The specific version of Kubernetes to use for your cluster. Leaving this field
+            as None will use the latest version supported by Microsoft Azure.
+
+            By default, Nebari will run a check during initiation for all the
+            available supported versions of kubernetes in the selected region and will
+            use the latest version available. General implementation details can be
+            found in the
+            [initialize.py](https://github.com/nebari-dev/nebari/blob/develop/src/_nebari/initialize.py#L120-L133)
+            file.
+            """
+        ),
+    )
+    storage_account_postfix: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The postfix to use for the storage account name. The storage account is used
+            for the Azure Disk and Azure File storage classes.
+            """
+        ),
+    )
+    resource_group_name: Optional[str] = Field(
+        None,
+        description=cleandoc(
+            """
+            The name of the Azure Resource Group to use for the Kubernetes cluster. If not
+            provided, Nebari will automatically generate a name based on the project and
+            namespace.
+            """
+        ),
+    )
+    node_groups: Dict[str, AzureNodeGroup] = Field(
+        default=DEFAULT_AZURE_NODE_GROUPS,
+        description=cleandoc(
+            """
+            A mapping of node group names to their configurations. Each node group can
+            be configured with different instance types and scaling settings based on
+            the roles and demands of your applications.
+            """
+        ),
+    )
+    storage_account_postfix: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The postfix to use for the storage account name. The storage account is used
+            for the Azure Disk and Azure File storage classes.
+            """
+        ),
+    )
+    vnet_subnet_id: Optional[str] = Field(
+        None,
+        description=cleandoc(
+            """
+            The ID of the subnet to use for the Kubernetes cluster. If not provided, Nebari
+            will automatically generate a subnet based on the project and namespace.
+            """
+        ),
+    )
+    private_cluster_enabled: bool = Field(
+        False,
+        description=cleandoc(
+            """
+            Determines whether to enable private cluster mode for the Kubernetes cluster.
+            Private cluster mode restricts access to the cluster's API server to only
+            private IP addresses.
+            """
+        ),
+    )
+    resource_group_name: Optional[str] = Field(
+        None,
+        description=cleandoc(
+            """
+            The name of the Azure Resource Group to use for the Kubernetes cluster. If not
+            provided, Nebari will automatically generate a name based on the project and
+            namespace.
+            """
+        ),
+    )
+    tags: Optional[Dict[str, str]] = Field(
+        default={},
+        description=cleandoc(
+            """
+            Tags to apply to the resources within the cluster. Tags can help you organize
+            and manage your Azure resources by grouping and filtering them based on custom
+            labels.
+            """
+        ),
+    )
+    network_profile: Optional[Dict[str, str]] = Field(
+        None,
+        description=cleandoc(
+            """
+            The network profile to use for the Kubernetes cluster. The network profile
+            determines the network configuration for the cluster, including the maximum
+            number of pods per node.
+            """
+        ),
+    )
+    max_pods: Optional[int] = Field(
+        None,
+        description=cleandoc(
+            """
+            The maximum number of pods per node to allow in the Kubernetes cluster. If not
+            provided, Nebari will automatically set this value based on the instance type
+            of the node group.
+            """
+        ),
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -429,12 +945,66 @@ class AzureProvider(schema.Base):
 
 
 class AWSNodeGroup(schema.Base):
-    instance: str
-    min_nodes: int = 0
-    max_nodes: int
-    gpu: bool = False
-    single_subnet: bool = False
-    permissions_boundary: Optional[str] = None
+    instance: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The instance type to use for nodes in this node group. Refer to the Amazon
+            Web Services instance types documentation to choose an appropriate instance
+            type based on your needs.
+            """
+        ),
+    )
+    min_nodes: int = Field(
+        0,
+        description=cleandoc(
+            """
+            The minimum number of nodes in this node group. This helps ensure that your
+            cluster scales according to workload demands while maintaining a baseline
+            capacity.
+            """
+        ),
+    )
+    max_nodes: int = Field(
+        1,
+        description=cleandoc(
+            """
+            The maximum number of nodes in this node group. This setting limits the
+            scaling capability of your cluster to prevent over-provisioning of
+            resources.
+            """
+        ),
+    )
+    gpu: bool = Field(
+        False,
+        description=cleandoc(
+            """
+            Determines whether to enable GPU support for nodes in this node group. This
+            setting is useful for workloads that require GPU acceleration.
+            """
+        ),
+    )
+    single_subnet: bool = Field(
+        False,
+        description=cleandoc(
+            """
+            Determines whether to use a single subnet for all nodes in this node group.
+            This setting is useful for simplifying network configurations and reducing
+            complexity.
+            """
+        ),
+    )
+    permissions_boundary: Optional[str] = Field(
+        None,
+        description=cleandoc(
+            """
+            The ARN of the permissions boundary to use for the Amazon Web Services
+            Kubernetes cluster. By default, Nebari will automatically set this field to
+            `None`. For more details on its implementation, see the
+            `init.py:check_cloud_provider_region` function.
+            """
+        ),
+    )
 
 
 DEFAULT_AWS_NODE_GROUPS = {
@@ -449,15 +1019,138 @@ DEFAULT_AWS_NODE_GROUPS = {
 
 
 class AmazonWebServicesProvider(schema.Base):
-    region: str
-    kubernetes_version: str
-    availability_zones: Optional[List[str]]
-    node_groups: Dict[str, AWSNodeGroup] = DEFAULT_AWS_NODE_GROUPS
-    existing_subnet_ids: Optional[List[str]] = None
-    existing_security_group_id: Optional[str] = None
-    vpc_cidr_block: str = "10.10.0.0/16"
-    permissions_boundary: Optional[str] = None
-    tags: Optional[Dict[str, str]] = {}
+    region: str = Field(
+        ...,
+        description=cleandoc(
+            """
+            The geographical region where your Amazon Web Services Kubernetes cluster
+            will be deployed. By default, during Nebari initialization, the region is
+            automatically set to the current value of `AWS_DEFAULT_REGION` constant. For more
+            details on its implementation, see the `init.py:check_cloud_provider_region` function.
+            """
+        ),
+        note=cleandoc(
+            """
+            The available regions can be found at Amazon Web Services' [select a
+            region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions) page.
+            keep in mind that changing regions may affect the latency of your services.
+            """
+        ),
+        warning=cleandoc(
+            """In case of Nebari have been already deployed, if triggered, it will
+            attempt to create a new cluster in the new region and conflicts may arise.
+            """
+        ),
+    )
+    kubernetes_version: str = Field(
+        None,
+        description=cleandoc(
+            """
+            The specific version of Kubernetes to use for your cluster. Leaving this field
+            as None will use the latest version supported by Amazon Web Services.
+
+            By default, Nebari will run a check during initiation for all the
+            available supported versions of kubernetes in the selected region and will
+            use the latest version available. General implementation details can be
+            found in the
+            [initialize.py](https://github.com/nebari-dev/nebari/blob/develop/src/_nebari/initialize.py#L120-L133)
+            file.
+            """
+        ),
+    )
+    availability_zones: Optional[List[str]] = Field(
+        default=[],
+        description=cleandoc(
+            """
+            A list of availability zones in which to deploy your EKS cluster. By default, Nebari will automatically set this field to
+            the first two availability zones in the selected region.
+
+            If your region of choice was `us-east-1`, the default availability zones
+            would be `['us-east-1a', 'us-east-1b']`. Those values are fetched from the
+            aws api and are subject to change.
+            """
+        ),
+        note=cleandoc(
+            """
+            The available availability zones can be found at Amazon Web Services'
+            [select a region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions)
+            page. Keep in mind that different availability zones may have different
+            affects on the latency of your services.
+            """
+        ),
+        warning=cleandoc(
+            """Do not update this field after the cluster has been created, as it may
+            cause issues with the cluster's networking configuration and may lead to a
+            complete cluster rebuild.
+            """
+        ),
+    )
+    node_groups: Dict[str, AWSNodeGroup] = Field(
+        default=DEFAULT_AWS_NODE_GROUPS,
+        description=cleandoc(
+            """
+            A mapping of node group names to their configurations. Each node group can
+            be configured with different instance types and scaling settings based on
+            the roles and demands of your applications.
+            """
+        ),
+    )
+    existing_subnet_ids: Optional[List[str]] = Field(
+        default=None,
+        description=cleandoc(
+            """
+            A list of existing subnet IDs to use for the Amazon Web Services Kubernetes
+            cluster. By default, Nebari will automatically set this field to `None`. For
+            more details on its implementation, see the `init.py:check_cloud_provider_region`
+            function.
+            """
+        ),
+    )
+    existing_security_group_id: Optional[str] = Field(
+        default=None,
+        description=cleandoc(
+            """
+            The ID of an existing security group to use for the Amazon Web Services
+            Kubernetes cluster. By default, Nebari will automatically set this field to
+            `None`. For more details on its implementation, see the
+            `init.py:check_cloud_provider_region` function.
+            """
+        ),
+    )
+    vpc_cidr_block: str = Field(
+        "10.10.0.0/16",
+        description=cleandoc(
+            """
+            The CIDR block to use for the Amazon Web Services Kubernetes cluster's VPC.
+            By default, Nebari will automatically set this field to `"10.10.0.0/16"`.
+            For
+            more details on its implementation, see the
+            `init.py:check_cloud_provider_region`
+            function.
+            """
+        ),
+    )
+    permissions_boundary: Optional[str] = Field(
+        default=None,
+        description=cleandoc(
+            """
+            The ARN of the permissions boundary to use for the Amazon Web Services
+            Kubernetes cluster. By default, Nebari will automatically set this field to
+            `None`. For more details on its implementation, see the
+            `init.py:check_cloud_provider_region` function.
+            """
+        ),
+    )
+    tags: Optional[Dict[str, str]] = Field(
+        default={},
+        description=cleandoc(
+            """
+            Tags to apply to the resources within the cluster. Tags can help you organize
+            and manage your Amazon Web Services resources by grouping and filtering them
+            based on custom labels.
+            """
+        ),
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -799,6 +1492,27 @@ class InputSchema(schema.Base):
             """
         ),
         depends_on={"provider": schema.ProviderEnum.local},
+        examples=[
+            cleandoc(
+                """Bellow is a full example of how the defaults values are set for the
+                local provider:
+                ```yaml
+                local:
+                    kube_context: test-cluster
+                    node_selectors:
+                        general:
+                            key: "kubernetes.io/os"
+                            value: "linux"
+                        user:
+                            key: "kubernetes.io/os"
+                            value: "linux"
+                        worker:
+                            key: "kubernetes.io/os"
+                            value: "linux"
+                ```
+                """
+            )
+        ],
     )
     existing: Optional[ExistingProvider] = Field(
         default_factory=lambda: ExistingProvider(),
@@ -820,6 +1534,92 @@ class InputSchema(schema.Base):
             """
         ),
         depends_on={"provider": schema.ProviderEnum.existing},
+        examples={
+            "AWS": cleandoc(
+                """
+                Below is an example of how to set the `kube_context` field in the
+                event that you need to specify the correct cluster, when deploying into
+                an existing AWS infrastructure:
+                ```yaml
+                existing:
+                    kube_context: arn:aws:eks:<region>:xxxxxxxxxxxx:cluster/
+                    node_selectors:
+                        general:
+                            key: "eks.amazonaws.com/nodegroup"
+                            value: "general"
+                        user:
+                            key: "eks.amazonaws.com/nodegroup"
+                            value: "user"
+                        worker:
+                            key: "eks.amazonaws.com/nodegroup"
+                            value: "worker"
+                    ```
+                """
+            ),
+            "GCP": cleandoc(
+                """
+                Below is an example of how to set the `kube_context` field in the
+                event that you need to specify the correct cluster, when deploying into
+                an existing GCP infrastructure:
+                ```yaml
+                existing:
+                    kube_context: gke_<project_id>_<region>_<cluster_name>
+                    node_selectors:
+                        general:
+                            key: "cloud.google.com/gke-nodepool"
+                            value: "general"
+                        user:
+                            key: "cloud.google.com/gke-nodepool"
+                            value: "user"
+                        worker:
+                            key: "cloud.google.com/gke-nodepool"
+                            value: "worker"
+                ```
+                """
+            ),
+            "Azure": cleandoc(
+                """
+                Below is an example of how to set the `kube_context` field in the
+                event that you need to specify the correct cluster, when deploying into
+                an existing Azure infrastructure:
+                ```yaml
+                existing:
+                    kube_context: <cluster_name>
+                    node_selectors:
+                        general:
+                            key: "kubernetes.azure.com/agentpool"
+                            value: "general"
+                        user:
+                            key: "kubernetes.azure.com/agentpool"
+                            value: "user"
+                        worker:
+                            key: "kubernetes.azure.com/agentpool"
+                            value: "worker"
+                ```
+                """
+            ),
+            "DO": cleandoc(
+                """
+                Below is an example of how to set the `kube_context` field in the
+                event that you need to specify the correct cluster, when deploying into
+                an existing Digital Ocean infrastructure:
+                ```yaml
+                existing:
+                    kube_context: <cluster_name>
+                    node_selectors:
+                        general:
+                            key: "doks.digitalocean.com/node-pool"
+                            value: "general"
+                        user:
+                            key: "doks.digitalocean.com/node-pool"
+                            value: "user"
+                        worker:
+                            key: "doks.digitalocean.com/node-pool"
+                            value: "worker"
+                ```
+                """
+            ),
+        },
         # group_by="provider",
     )
     google_cloud_platform: Optional[GoogleCloudPlatformProvider] = Field(
@@ -833,19 +1633,76 @@ class InputSchema(schema.Base):
             """
         ),
         depends_on={"provider": schema.ProviderEnum.gcp},
+        examples=[
+            cleandoc(
+                """
+                Below is a full example of how the defaults values are set for the
+                Google Cloud Platform provider:
+                ```yaml
+                google_cloud_platform:
+                    region: us-central1
+                    project: my-project
+                    kubernetes_version: 1.21.4-gke.2300
+                    availability_zones:
+                        - us-central1-a
+                        - us-central1-b
+                    node_groups:
+                        general:
+                            instance: n1-standard-4
+                            min_nodes: 1
+                            max_nodes: 1
+                        user:
+                            instance: n1-standard-4
+                            min_nodes: 0
+                            max_nodes: 5
+                        worker:
+                            instance: n1-standard-4
+                            min_nodes: 0
+                            max_nodes: 5
+                ```
+                """
+            )
+        ],
         # group_by="provider",
     )
     amazon_web_services: Optional[AmazonWebServicesProvider] = Field(
         default_factory=lambda: AmazonWebServicesProvider(),
         description=cleandoc(
             """
-            This provider facilitates Nebari deployments on Amazon Web Services, leveraging
-            AWS's extensive cloud capabilities. It's ideal for users looking to integrate
-            with AWS's managed Kubernetes service, EKS, and utilize AWS's wide range of
-            cloud solutions for enhanced scalability and reliability.
+            This provider facilitates Nebari deployments on [Amazon Web Services (AWS)](https://aws.amazon.com/eks/), leveraging
+            AWS's extensive cloud capabilities.
             """
         ),
         depends_on={"provider": schema.ProviderEnum.aws},
+        examples=[
+            cleandoc(
+                """
+                Below is a full example of how the defaults values are set for the
+                AWS provider:
+                ```yaml
+                amazon_web_services:
+                    region: us-west-2
+                    kubernetes_version: 1.21
+                    availability_zones:
+                        - us-west-2a
+                        - us-west-2b
+                    node_groups:
+                        general:
+                            instance: m5.2xlarge
+                            min_nodes: 1
+                            max_nodes: 1
+                        user:
+                            instance: m5.xlarge
+                            min_nodes: 0
+                            max_nodes: 5
+                        worker:
+                            instance: m5.xlarge
+                            min_nodes: 0
+                            max_nodes: 5
+                ```
+                """
+            )
+        ],
         # group_by="provider",
     )
     azure: Optional[AzureProvider] = Field(
@@ -860,6 +1717,37 @@ class InputSchema(schema.Base):
             """
         ),
         depends_on={"provider": schema.ProviderEnum.azure},
+        examples=[
+            cleandoc(
+                """
+                Below is a full example of how the defaults values are set for the
+                Azure provider:
+                ```yaml
+                azure:
+                    region: eastus
+                    kubernetes_version: 1.21.4
+                    resource_group_name: my-resource-group
+                    vnet_subnet_id: my-vnet-subnet-id
+                    private_cluster_enabled: false
+                    tags:
+                        my-tag-key: my-tag-value
+                    node_groups:
+                        general:
+                            instance: Standard_D4_v4
+                            min_nodes: 1
+                            max_nodes: 1
+                        user:
+                            instance: Standard_D4_v4
+                            min_nodes: 0
+                            max_nodes: 5
+                        worker:
+                            instance: Standard_D4_v4
+                            min_nodes: 0
+                            max_nodes: 5
+                ```
+                """
+            )
+        ],
         # group_by="provider",
     )
     digital_ocean: Optional[DigitalOceanProvider] = Field(
@@ -868,14 +1756,49 @@ class InputSchema(schema.Base):
             """
             Designed for Nebari deployments on Digital Ocean, this provider simplifies
             the process of managing Kubernetes clusters through Digital Ocean Kubernetes
-            (DOKS) and their on deman machines, called Droplets.
+            (DOKS) and their on demand machines, called Droplets.
 
             It's a great choice for users looking to deploy applications on a cloud
             platform that's easy to use, while offering a wide range of services and
             integrations.
             """
         ),
+        note=cleandoc(
+            """
+            By default, Nebari will render and apply the default values during its first
+            initialization and deployment. For extra details about how these values are
+            assigned, please refer to the
+            [initialize.py](https://github.com/nebari-dev/nebari/blob/develop/src/_nebari/initialize.py#L120-L133)
+            file.
+            """
+        ),
         depends_on={"provider": schema.ProviderEnum.do},
+        examples=[
+            cleandoc(
+                """
+                Below is a full example of how the defaults values are set for the
+                Digital Ocean provider:
+                ```yaml
+                digital_ocean:
+                    region: nyc1
+                    kubernetes_version: 1.21.4-do.0
+                    node_groups:
+                        general:
+                            instance: s-4vcpu-8gb
+                            min_nodes: 1
+                            max_nodes: 1
+                        user:
+                            instance: s-4vcpu-8gb
+                            min_nodes: 0
+                            max_nodes: 5
+                        worker:
+                            instance: s-4vcpu-8gb
+                            min_nodes: 0
+                            max_nodes: 5
+                ```
+                """
+            )
+        ],
         # group_by="provider",
     )
 

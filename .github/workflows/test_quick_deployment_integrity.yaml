@@ -49,7 +49,7 @@ jobs:
 
       - name: Install Nebari and playwright
         run: |
-          pip install .[dev]
+          pip install -e .
 
       - name: Enable docker permissions for user
         run: |

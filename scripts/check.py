@@ -2,6 +2,7 @@ import argparse
 import contextlib
 import json
 import logging
+import os
 import pathlib
 
 from _nebari.config import read_configuration
@@ -10,12 +11,12 @@ from nebari import hookspecs
 from nebari.plugins import nebari_plugin_manager
 
 CONFIG_FILENAME = "nebari-config.yaml"
-REL_PREFIX = ""
+REL_PREFIX = os.environ.get("NEBARI_REL_PREFIX", "")
 
 
 def main(tmp_dir: str):
     # Set up directories
-    output_directory = pathlib.Path.cwd()
+    output_directory = pathlib.Path.cwd() / REL_PREFIX
     print(f"Running on {output_directory}")
 
     # Configure logging
@@ -27,7 +28,7 @@ def main(tmp_dir: str):
 
     # Read configuration
     config = read_configuration(
-        output_directory / REL_PREFIX / CONFIG_FILENAME, config_schema=config_schema
+        output_directory / CONFIG_FILENAME, config_schema=config_schema
     )
 
     # Deploy Nebari
@@ -36,17 +37,13 @@ def main(tmp_dir: str):
         with contextlib.ExitStack() as stack:
             for stage in stages:
                 s: hookspecs.NebariStage = stage(
-                    output_directory=output_directory / REL_PREFIX, config=config
+                    output_directory=output_directory, config=config
                 )
                 stack.enter_context(s.plan(stage_outputs, tmp_dir))
 
-                (output_directory / REL_PREFIX / "outputs").mkdir(
-                    parents=True, exist_ok=True
-                )
+                (output_directory / "outputs").mkdir(parents=True, exist_ok=True)
 
-                with open(
-                    output_directory / REL_PREFIX / "outputs" / stage.name, "w"
-                ) as f:
+                with open(output_directory / "outputs" / stage.name, "w") as f:
                     f.write(json.dumps(stage_outputs))
 
 

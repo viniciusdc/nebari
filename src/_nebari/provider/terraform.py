@@ -27,9 +27,11 @@ def deploy(
     terraform_init: bool = True,
     terraform_import: bool = False,
     terraform_apply: bool = True,
+    terraform_plan: bool = False,
     terraform_destroy: bool = False,
     input_vars: Dict[str, Any] = {},
     state_imports: List[Any] = [],
+    tfvar_persist: bool = False,
 ):
     """Execute a given terraform directory.
 
@@ -53,8 +55,9 @@ def deploy(
         to terraform import
     """
     with tempfile.NamedTemporaryFile(
-        mode="w", encoding="utf-8", suffix=".tfvars.json"
+        mode="w", encoding="utf-8", suffix=".tfvars.json", delete=tfvar_persist
     ) as f:
+        # print where (path) the tfvars file is
         json.dump(input_vars, f.file)
         f.file.flush()
 
@@ -69,6 +72,9 @@ def deploy(
 
         if terraform_apply:
             apply(directory, var_files=[f.name])
+
+        if terraform_plan:
+            plan(directory, var_files=[f.name])
 
         if terraform_destroy:
             destroy(directory, var_files=[f.name])
@@ -134,6 +140,21 @@ def init(directory=None, upgrade=True):
         command = ["init"]
         if upgrade:
             command.append("-upgrade")
+        run_terraform_subprocess(command, cwd=directory, prefix="terraform")
+
+
+def plan(directory=None, targets=None, var_files=None):
+    targets = targets or []
+    var_files = var_files or []
+
+    logger.info(f"terraform validate directory={directory} targets={targets}")
+    command = (
+        ["plan"]
+        + ["-target=" + _ for _ in targets]
+        + ["-var-file=" + _ for _ in var_files]
+    )
+
+    with timer(logger, "terraform validate"):
         run_terraform_subprocess(command, cwd=directory, prefix="terraform")
 
 

@@ -32,6 +32,10 @@ class NebariStage:
     ):
         yield
 
+    @contextlib.contextmanager
+    def plan(self, stage_outputs: Dict[str, Dict[str, Any]]):
+        yield
+
     def check(
         self, stage_outputs: Dict[str, Dict[str, Any]], disable_prompt: bool = False
     ) -> bool:

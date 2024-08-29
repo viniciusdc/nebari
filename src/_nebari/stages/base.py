@@ -1,5 +1,6 @@
 import contextlib
 import inspect
+import json
 import os
 import pathlib
 from typing import Any, Dict, List, Tuple
@@ -71,6 +72,34 @@ class NebariTerraformStage(NebariStage):
 
         self.set_outputs(stage_outputs, terraform.deploy(**deploy_config))
         self.post_deploy(stage_outputs, disable_prompt)
+        yield
+
+    @contextlib.contextmanager
+    def plan(self, stage_outputs: Dict[str, Dict[str, Any]]):
+        validate_config = dict(
+            directory=str(self.output_directory / self.stage_prefix),
+            input_vars=self.input_vars(stage_outputs),
+        )
+        state_imports = self.state_imports()
+
+        # validate_config["terraform_apply"] = False
+        validate_config["terraform_plan"] = True
+        validate_config["tfvar_persist"] = True
+
+        if state_imports:
+            validate_config["terraform_import"] = True
+            validate_config["state_imports"] = state_imports
+
+        with open(
+            self.output_directory / f"{self.name}_validate_config.json", "w"
+        ) as f:
+            f.write(json.dumps(validate_config))
+
+        self.set_outputs(stage_outputs, terraform.deploy(**validate_config))
+
+        # save current evn vars to file
+        with open(self.output_directory / f"{self.name}_env_vars.json", "w") as f:
+            f.write(json.dumps(dict(os.environ)))
         yield
 
     def post_deploy(

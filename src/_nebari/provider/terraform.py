@@ -74,12 +74,11 @@ def deploy(
                 tfimport(
                     addr, id, directory=directory, var_files=[f.name], exist_ok=True
                 )
+        if terraform_plan:
+            plan(directory, var_files=[f.name])
 
         if terraform_apply:
             apply(directory, var_files=[f.name])
-
-        if terraform_plan:
-            plan(directory, var_files=[f.name])
 
         if terraform_destroy:
             destroy(directory, var_files=[f.name])

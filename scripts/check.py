@@ -39,7 +39,7 @@ def main(tmp_dir: str):
                 s: hookspecs.NebariStage = stage(
                     output_directory=output_directory, config=config
                 )
-                stack.enter_context(s.plan(stage_outputs, tmp_dir))
+                stack.enter_context(s.deploy(stage_outputs, tmp_dir))
 
                 (output_directory / "outputs").mkdir(parents=True, exist_ok=True)
 

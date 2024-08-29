@@ -99,12 +99,12 @@ jobs:
       - name: Create /tmp/artifacts directory
         run: |
           mkdir -p /tmp/artifacts
-        env:
-          NEBARI_REL_PREFIX: local-deployment
 
       - name: Run integrity checks
         run: |
           python scripts/check.py --tmp-dir /tmp/artifacts
+        env:
+          NEBARI_REL_PREFIX: local-deployment
 
       - name: Save artifacts
         uses: actions/upload-artifact@v4.3.1

@@ -6,6 +6,9 @@ env:
   NEBARI_IMAGE_TAG: "main"
 
 on:
+  push:
+    branches:
+      - test-var-deps
   workflow_dispatch:
 
 # When the cancel-in-progress: true option is specified, any concurrent jobs or workflows using the same

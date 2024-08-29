@@ -1,4 +1,4 @@
-name: "Local Integration Tests"
+name: "Integrity Check for terraform state"
 
 env:
   TEST_USERNAME: "test-user"

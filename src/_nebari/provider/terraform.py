@@ -32,6 +32,7 @@ def deploy(
     input_vars: Dict[str, Any] = {},
     state_imports: List[Any] = [],
     tfvar_persist: bool = False,
+    tfvar_persist_dir: str = None,
 ):
     """Execute a given terraform directory.
 
@@ -55,7 +56,11 @@ def deploy(
         to terraform import
     """
     with tempfile.NamedTemporaryFile(
-        mode="w", encoding="utf-8", suffix=".tfvars.json", delete=tfvar_persist
+        mode="w",
+        encoding="utf-8",
+        suffix=".tfvars.json",
+        delete=tfvar_persist,
+        dir=tfvar_persist_dir,
     ) as f:
         # print where (path) the tfvars file is
         json.dump(input_vars, f.file)

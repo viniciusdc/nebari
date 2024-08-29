@@ -75,7 +75,7 @@ class NebariTerraformStage(NebariStage):
         yield
 
     @contextlib.contextmanager
-    def plan(self, stage_outputs: Dict[str, Dict[str, Any]]):
+    def plan(self, stage_outputs: Dict[str, Dict[str, Any]], tmp_dir: str):
         validate_config = dict(
             directory=str(self.output_directory / self.stage_prefix),
             input_vars=self.input_vars(stage_outputs),
@@ -85,6 +85,7 @@ class NebariTerraformStage(NebariStage):
         # validate_config["terraform_apply"] = False
         validate_config["terraform_plan"] = True
         validate_config["tfvar_persist"] = True
+        validate_config["tfvar_persist_dir"] = tmp_dir
 
         if state_imports:
             validate_config["terraform_import"] = True

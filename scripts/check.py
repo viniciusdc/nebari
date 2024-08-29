@@ -15,7 +15,7 @@ REL_PREFIX = ""
 
 def main(tmp_dir: str):
     # Set up directories
-    output_directory = pathlib.Path(tmp_dir)
+    output_directory = pathlib.Path.cwd()
     print(f"Running on {output_directory}")
 
     # Configure logging

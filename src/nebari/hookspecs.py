@@ -33,7 +33,7 @@ class NebariStage:
         yield
 
     @contextlib.contextmanager
-    def plan(self, stage_outputs: Dict[str, Dict[str, Any]]):
+    def plan(self, stage_outputs: Dict[str, Dict[str, Any]], tmp_dir: str):
         yield
 
     def check(
